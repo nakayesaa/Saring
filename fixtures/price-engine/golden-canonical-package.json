@@ -1,0 +1,199 @@
+{
+  "schema_version": "saring-canonical-package-1.0.0",
+  "package": {
+    "package_id": "SYN-LAPTOP-HYBRID-001",
+    "source_id": "SYN-LAPTOP-HYBRID-001",
+    "name": "Pengadaan Laptop Bisnis Nasional",
+    "fiscal_year": 2025,
+    "procurement_method": "Tender cepat",
+    "category_code": "LAPTOP_BUSINESS",
+    "buyer": {
+      "institution_id": "BUYER-ALPHA",
+      "institution_name": "Unit Pengadaan Alpha",
+      "unit_id": "UNIT-INFRA-DIGITAL",
+      "unit_name": "Direktorat Infrastruktur Digital"
+    },
+    "region_code": "ID-JK",
+    "hps_total": 39600000000,
+    "currency": "IDR",
+    "bid_deadline_at": "2025-09-19T17:00:00+07:00",
+    "analysis_cutoff_at": "2025-09-19T18:00:00+07:00",
+    "workflow_stage": "PRE_AWARD",
+    "bundle_mode": "SYNTHETIC",
+    "participant_count": 15
+  },
+  "items": [
+    {
+      "item_id": "LAPTOP-BISNIS-16-512",
+      "description": "Laptop bisnis RAM 16 GB dan SSD 512 GB",
+      "brand": null,
+      "model": null,
+      "part_number": null,
+      "quantity": 3000,
+      "unit": "UNIT",
+      "hps_unit_price": 13200000,
+      "specifications": {
+        "ram_gb": 16,
+        "storage_gb": 512,
+        "storage_type": "SSD",
+        "condition": "NEW"
+      },
+      "tax_included": true,
+      "shipping_included": true,
+      "installation_included": "UNKNOWN",
+      "warranty_months": 36,
+      "source_record_id": "SRC-ITEM-001"
+    }
+  ],
+  "requirements": [],
+  "participants": [
+    {
+      "participation_id": "PART-SYN-V001",
+      "vendor": { "vendor_id": "SYN-V001", "source_id": "SYN-V001", "legal_name": "PT Arunika Komputasi Nusantara", "normalized_name": "PT ARUNIKA KOMPUTASI NUSANTARA" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T09:01:00+07:00", "bid_total": 37050000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 12350000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V002",
+      "vendor": { "vendor_id": "SYN-V002", "source_id": "SYN-V002", "legal_name": "PT Bintang Sistem Digital", "normalized_name": "PT BINTANG SISTEM DIGITAL" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T09:12:00+07:00", "bid_total": 36540000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 12180000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V003",
+      "vendor": { "vendor_id": "SYN-V003", "source_id": "SYN-V003", "legal_name": "PT Cakrawala Piranti Indonesia", "normalized_name": "PT CAKRAWALA PIRANTI INDONESIA" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T09:24:00+07:00", "bid_total": 43500000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 14500000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": ["DOC-COMMERCIAL-SYN-V003"], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V004",
+      "vendor": { "vendor_id": "SYN-V004", "source_id": "SYN-V004", "legal_name": "PT Daya Komputindo Utama", "normalized_name": "PT DAYA KOMPUTINDO UTAMA" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T09:36:00+07:00", "bid_total": 35760000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 11920000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V005",
+      "vendor": { "vendor_id": "SYN-V005", "source_id": "SYN-V005", "legal_name": "PT Elang Teknologi Mandiri", "normalized_name": "PT ELANG TEKNOLOGI MANDIRI" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T09:48:00+07:00", "bid_total": 34950000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 11650000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V006",
+      "vendor": { "vendor_id": "SYN-V006", "source_id": "SYN-V006", "legal_name": "PT Fajar Perangkat Negeri", "normalized_name": "PT FAJAR PERANGKAT NEGERI" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T10:00:00+07:00", "bid_total": 36900000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 12300000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V007",
+      "vendor": { "vendor_id": "SYN-V007", "source_id": "SYN-V007", "legal_name": "PT Garuda Data Solusi", "normalized_name": "PT GARUDA DATA SOLUSI" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T10:12:00+07:00", "bid_total": 36840000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 12280000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V008",
+      "vendor": { "vendor_id": "SYN-V008", "source_id": "SYN-V008", "legal_name": "PT Harmoni Komputer Indonesia", "normalized_name": "PT HARMONI KOMPUTER INDONESIA" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T10:24:00+07:00", "bid_total": 34500000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 11500000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V009",
+      "vendor": { "vendor_id": "SYN-V009", "source_id": "SYN-V009", "legal_name": "PT Inti Digital Persada", "normalized_name": "PT INTI DIGITAL PERSADA" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T10:36:00+07:00", "bid_total": 37440000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 12480000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V010",
+      "vendor": { "vendor_id": "SYN-V010", "source_id": "SYN-V010", "legal_name": "CV Jelajah Teknologi", "normalized_name": "CV JELAJAH TEKNOLOGI" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T10:48:00+07:00", "bid_total": 35100000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 11700000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V011",
+      "vendor": { "vendor_id": "SYN-V011", "source_id": "SYN-V011", "legal_name": "PT Karya Notebook Nasional", "normalized_name": "PT KARYA NOTEBOOK NASIONAL" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T11:00:00+07:00", "bid_total": 38100000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 12700000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V012",
+      "vendor": { "vendor_id": "SYN-V012", "source_id": "SYN-V012", "legal_name": "PT Lintas Perangkat Nusantara", "normalized_name": "PT LINTAS PERANGKAT NUSANTARA" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T11:12:00+07:00", "bid_total": 35820000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 11940000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V013",
+      "vendor": { "vendor_id": "SYN-V013", "source_id": "SYN-V013", "legal_name": "PT Merah Putih Komputasi", "normalized_name": "PT MERAH PUTIH KOMPUTASI" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T11:24:00+07:00", "bid_total": 36150000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 12050000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V014",
+      "vendor": { "vendor_id": "SYN-V014", "source_id": "SYN-V014", "legal_name": "PT Nusa Data Teknologi", "normalized_name": "PT NUSA DATA TEKNOLOGI" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T11:36:00+07:00", "bid_total": 34860000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 11620000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 0.98, "reviewed": true }
+    },
+    {
+      "participation_id": "PART-SYN-V015",
+      "vendor": { "vendor_id": "SYN-V015", "source_id": "SYN-V015", "legal_name": "PT Orbit Sistem Indonesia", "normalized_name": "PT ORBIT SISTEM INDONESIA" },
+      "status": "SUBMITTED", "submitted_at": "2025-09-19T11:48:00+07:00", "bid_total": 37200000000,
+      "items": [{ "item_id": "LAPTOP-BISNIS-16-512", "offered_unit_price": 12400000, "quantity": 3000, "offered_specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" } }],
+      "document_ids": [], "entity_resolution": { "status": "RESOLVED", "confidence": 1, "reviewed": true }
+    }
+  ],
+  "documents": [
+    {
+      "document_id": "DOC-COMMERCIAL-SYN-V003",
+      "vendor_id": "SYN-V003",
+      "document_type": "COMMERCIAL_BID",
+      "file_name": "commercial_offer_SYN-V003.pdf",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "mime_type": "application/pdf",
+      "byte_size": 24000,
+      "page_count": 9,
+      "native_text_available": true,
+      "ingest_status": "PARSED",
+      "classification": "SYNTHETIC"
+    }
+  ],
+  "historical_participation": [],
+  "quality": {
+    "completeness_by_module": {
+      "price": 1,
+      "document": 0.96,
+      "graph": 0.82,
+      "technical": 1,
+      "completeness": 0.96,
+      "data_quality": 0.98
+    },
+    "quality_flags": ["SYNTHETIC_DEMONSTRATION"],
+    "low_confidence_field_count": 1,
+    "unresolved_entity_count": 0
+  },
+  "provenance": [
+    {
+      "record_id": "PROV-PACKAGE-001",
+      "source_system": "SARING_GOLDEN_FIXTURE",
+      "source_record_id": "SYN-LAPTOP-HYBRID-001",
+      "retrieved_at": "2025-09-19T17:30:00+07:00",
+      "effective_at": "2025-09-19T17:00:00+07:00",
+      "raw_payload_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "raw_payload_location": "fixture://price-engine/golden-canonical-package.json",
+      "parser_version": "fixture-canonicalizer-1.0.0",
+      "legal_basis_tag": "SYNTHETIC",
+      "retention_class": "TEMPORARY_ENRICHMENT"
+    }
+  ]
+}

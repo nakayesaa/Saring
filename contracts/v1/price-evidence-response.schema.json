@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/price-evidence-response.schema.json",
+  "title": "SARING Price Evidence Response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "engine_result", "details"],
+  "properties": {
+    "schema_version": { "const": "saring-price-evidence-response-1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "engine_result": {
+      "$ref": "https://saring.local/contracts/v1/engine-result.schema.json"
+    },
+    "details": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://saring.local/contracts/v1/price-engine-detail.schema.json"
+      }
+    }
+  }
+}

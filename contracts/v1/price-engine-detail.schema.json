@@ -1,0 +1,358 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/price-engine-detail.schema.json",
+  "title": "SARING Price Engine Detail v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "detail_id",
+    "run_id",
+    "package_id",
+    "target_id",
+    "item_id",
+    "participation_id",
+    "vendor_id",
+    "engine_version",
+    "model_artifact_id",
+    "comparator_snapshot_id",
+    "analysis_cutoff",
+    "status",
+    "normalized_target",
+    "cohort",
+    "interval",
+    "quote",
+    "assessment",
+    "confidence",
+    "comparator_references",
+    "adjustments",
+    "exclusions",
+    "data_quality_flags",
+    "alternative_explanations",
+    "evidence_locator_ids",
+    "abstention"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-price-engine-detail-1.0.0" },
+    "detail_id": { "$ref": "#/$defs/id" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "target_id": { "$ref": "#/$defs/id" },
+    "item_id": { "$ref": "#/$defs/id" },
+    "participation_id": { "$ref": "#/$defs/id" },
+    "vendor_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+    "engine_version": { "type": "string", "minLength": 1 },
+    "model_artifact_id": { "$ref": "#/$defs/id" },
+    "comparator_snapshot_id": { "$ref": "#/$defs/id" },
+    "analysis_cutoff": { "$ref": "#/$defs/timestamp" },
+    "status": { "enum": ["SCORED", "LOW_CONFIDENCE", "ABSTAINED", "NOT_APPLICABLE"] },
+    "normalized_target": { "$ref": "#/$defs/normalizedTarget" },
+    "cohort": { "anyOf": [{ "$ref": "#/$defs/cohort" }, { "type": "null" }] },
+    "interval": { "anyOf": [{ "$ref": "#/$defs/interval" }, { "type": "null" }] },
+    "quote": { "$ref": "#/$defs/quote" },
+    "assessment": { "anyOf": [{ "$ref": "#/$defs/assessment" }, { "type": "null" }] },
+    "confidence": { "$ref": "#/$defs/confidence" },
+    "comparator_references": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/comparatorReference" }
+    },
+    "adjustments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/adjustment" }
+    },
+    "exclusions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/exclusion" }
+    },
+    "data_quality_flags": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "alternative_explanations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/alternativeExplanation" }
+    },
+    "evidence_locator_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "abstention": { "anyOf": [{ "$ref": "#/$defs/abstention" }, { "type": "null" }] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["SCORED", "LOW_CONFIDENCE"] } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "cohort": { "$ref": "#/$defs/cohort" },
+          "interval": { "$ref": "#/$defs/interval" },
+          "assessment": { "$ref": "#/$defs/assessment" },
+          "abstention": { "type": "null" },
+          "comparator_references": { "type": "array", "minItems": 1 },
+          "evidence_locator_ids": { "type": "array", "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["ABSTAINED", "NOT_APPLICABLE"] } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "interval": { "type": "null" },
+          "assessment": { "type": "null" },
+          "abstention": { "$ref": "#/$defs/abstention" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "nullableString": { "type": ["string", "null"] },
+    "scalar": { "type": ["string", "number", "boolean", "null"] },
+    "normalizedTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "category_code",
+        "brand",
+        "model",
+        "part_number",
+        "condition",
+        "specifications",
+        "configuration_fingerprint",
+        "resolution_level"
+      ],
+      "properties": {
+        "description": { "type": "string", "minLength": 1 },
+        "category_code": { "type": "string", "minLength": 1 },
+        "brand": { "$ref": "#/$defs/nullableString" },
+        "model": { "$ref": "#/$defs/nullableString" },
+        "part_number": { "$ref": "#/$defs/nullableString" },
+        "condition": { "enum": ["NEW", "USED", "REFURBISHED", "UNKNOWN"] },
+        "specifications": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/scalar" }
+        },
+        "configuration_fingerprint": { "$ref": "#/$defs/nullableString" },
+        "resolution_level": {
+          "enum": ["EXACT_SKU", "STRICT_CONFIGURATION", "RELAXED_CONFIGURATION", "UNRESOLVED"]
+        }
+      }
+    },
+    "cohort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cohort_level",
+        "comparator_count",
+        "source_count",
+        "seller_count",
+        "region_count",
+        "observation_date_min",
+        "observation_date_max",
+        "included_observation_ids",
+        "excluded_count_by_reason",
+        "deduplication_policy_version",
+        "retrieval_policy_version"
+      ],
+      "properties": {
+        "cohort_level": { "enum": ["EXACT_SKU", "STRICT_CONFIGURATION", "RELAXED_CONFIGURATION"] },
+        "comparator_count": { "type": "integer", "minimum": 1 },
+        "source_count": { "type": "integer", "minimum": 1 },
+        "seller_count": { "type": "integer", "minimum": 0 },
+        "region_count": { "type": "integer", "minimum": 0 },
+        "observation_date_min": { "$ref": "#/$defs/timestamp" },
+        "observation_date_max": { "$ref": "#/$defs/timestamp" },
+        "included_observation_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "excluded_count_by_reason": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "deduplication_policy_version": { "type": "string", "minLength": 1 },
+        "retrieval_policy_version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency", "q10", "q50", "q90", "method", "calibration_status", "calibration_scope"],
+      "properties": {
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "q10": { "type": "number", "exclusiveMinimum": 0 },
+        "q50": { "type": "number", "exclusiveMinimum": 0 },
+        "q90": { "type": "number", "exclusiveMinimum": 0 },
+        "method": { "const": "QUANTILE_REGRESSION" },
+        "calibration_status": { "enum": ["CALIBRATED", "UNCALIBRATED"] },
+        "calibration_scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "quote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quoted_unit_price", "quantity", "currency", "hps_unit_price"],
+      "properties": {
+        "quoted_unit_price": { "type": "number", "exclusiveMinimum": 0 },
+        "quantity": { "type": "number", "exclusiveMinimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "hps_unit_price": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "relative_deviation_above_q90",
+        "unit_difference_above_q90",
+        "estimated_exposure_requiring_verification",
+        "review_priority_score"
+      ],
+      "properties": {
+        "position": { "enum": ["BELOW_Q10", "WITHIN_INTERVAL", "ABOVE_Q90"] },
+        "relative_deviation_above_q90": { "type": "number", "minimum": 0 },
+        "unit_difference_above_q90": { "type": "number", "minimum": 0 },
+        "estimated_exposure_requiring_verification": { "type": "number", "minimum": 0 },
+        "review_priority_score": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall",
+        "cohort_sufficiency",
+        "field_completeness",
+        "interval_specificity",
+        "calibration_reliability",
+        "limiting_factors"
+      ],
+      "properties": {
+        "overall": { "type": "number", "minimum": 0, "maximum": 1 },
+        "cohort_sufficiency": { "type": "number", "minimum": 0, "maximum": 1 },
+        "field_completeness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "interval_specificity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "calibration_reliability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "limiting_factors": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "comparatorReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation_id",
+        "rank",
+        "similarity_score",
+        "normalized_unit_price",
+        "currency",
+        "observed_at",
+        "cohort_level",
+        "material_differences",
+        "commercial_basis_differences",
+        "locator_id"
+      ],
+      "properties": {
+        "observation_id": { "$ref": "#/$defs/id" },
+        "rank": { "type": "integer", "minimum": 1 },
+        "similarity_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "normalized_unit_price": { "type": "number", "exclusiveMinimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "observed_at": { "$ref": "#/$defs/timestamp" },
+        "cohort_level": { "enum": ["EXACT_SKU", "STRICT_CONFIGURATION", "RELAXED_CONFIGURATION"] },
+        "material_differences": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "commercial_basis_differences": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "locator_id": { "$ref": "#/$defs/id" }
+      }
+    },
+    "adjustment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "description", "amount"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "description": { "type": "string", "minLength": 1 },
+        "amount": { "type": ["number", "null"] }
+      }
+    },
+    "exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_id", "reason_code", "detail"],
+      "properties": {
+        "observation_id": { "$ref": "#/$defs/id" },
+        "reason_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "detail": { "type": "string", "minLength": 1 }
+      }
+    },
+    "alternativeExplanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "label", "basis", "locator_id"],
+      "properties": {
+        "code": {
+          "enum": [
+            "LONGER_WARRANTY",
+            "INSTALLATION_CONFIGURATION",
+            "REMOTE_REGION_SHIPPING",
+            "URGENT_DELIVERY",
+            "TAX_BASIS_MISMATCH",
+            "BUNDLED_SOFTWARE_SERVICE",
+            "UNEXTRACTED_HIGHER_SPEC",
+            "SMALL_QUANTITY",
+            "STALE_COMPARATOR",
+            "SOURCE_CHANNEL_DIFFERENCE"
+          ]
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "basis": { "type": "string", "minLength": 1 },
+        "locator_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] }
+      }
+    },
+    "abstention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason_code", "message", "missing_or_failed_requirements", "recoverable"],
+      "properties": {
+        "reason_code": {
+          "enum": [
+            "UNRESOLVED_PRODUCT",
+            "INSUFFICIENT_COMPARATORS",
+            "UNKNOWN_MATERIAL_PRICE_BASIS",
+            "UNRESOLVED_CURRENCY",
+            "UNRESOLVED_UNIT",
+            "INVALID_QUOTED_PRICE",
+            "POST_CUTOFF_INPUT",
+            "UNCALIBRATED_INTERVAL",
+            "UNSUPPORTED_CATEGORY",
+            "UNSUPPORTED_CONDITION",
+            "COMPARATOR_REPOSITORY_UNAVAILABLE",
+            "MODEL_ARTIFACT_MISMATCH"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "missing_or_failed_requirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "recoverable": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -1,0 +1,663 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrganizationRole {
+  ADMIN
+  REVIEWER
+  ANALYST
+  VIEWER
+}
+
+enum CaseRole {
+  OWNER
+  REVIEWER
+  CONTRIBUTOR
+  VIEWER
+}
+
+enum WorkflowStage {
+  INGESTING
+  VALIDATING
+  READY_FOR_ANALYSIS
+  IN_REVIEW
+  CLARIFICATION
+  ESCALATED
+  CLOSED
+}
+
+enum ParticipationStatus {
+  REGISTERED
+  SUBMITTED
+  WITHDRAWN
+  DISQUALIFIED
+  EVALUATED
+  AWARDED
+}
+
+enum DocumentType {
+  MANIFEST
+  PACKAGE_METADATA
+  HPS
+  RUP
+  ADMINISTRATIVE_BID
+  TECHNICAL_BID
+  COMMERCIAL_BID
+  EVALUATION
+  NEGOTIATION
+  AWARD
+  CONTRACT
+  CORPORATE_REGISTRY
+  MARKET_COMPARATOR
+  OTHER
+}
+
+enum IngestStatus {
+  QUARANTINED
+  VALIDATED
+  PARSING
+  PARSED
+  NEEDS_REVIEW
+  REJECTED
+}
+
+enum LegalBasisTag {
+  PUBLIC_INFORMATION
+  AUTHORIZED_PROCUREMENT
+  CONSENT
+  DSA
+  SYNTHETIC
+}
+
+enum RetentionClass {
+  PUBLIC_ARCHIVE
+  PROCUREMENT_CASE
+  PERSONAL_RESTRICTED
+  TEMPORARY_ENRICHMENT
+}
+
+enum DataClassification {
+  PUBLIC
+  INTERNAL
+  RESTRICTED
+  PERSONAL_RESTRICTED
+  SYNTHETIC
+}
+
+enum FindingModule {
+  PRICE
+  DOCUMENT
+  GRAPH
+  FUSION
+  DATA_QUALITY
+}
+
+enum FindingStatus {
+  OPEN
+  ACKNOWLEDGED
+  EXPLAINED
+  ESCALATED
+  DISMISSED
+  ABSTAINED
+}
+
+enum BriefStatus {
+  DRAFT
+  READY_FOR_REVIEW
+  APPROVED
+  SUPERSEDED
+}
+
+enum VerificationLevel {
+  UNVERIFIED
+  SOURCE_MATCHED
+  REVIEWER_VERIFIED
+}
+
+enum UploadIntentStatus {
+  PENDING
+  FINALIZED
+  REJECTED
+  EXPIRED
+}
+
+enum AnalysisJobStatus {
+  QUEUED
+  CLAIMED
+  RUNNING
+  COMPLETED
+  NEEDS_REVIEW
+  ABSTAINED
+  FAILED
+  CANCELLED
+}
+
+enum AnalysisJobStage {
+  QUEUED
+  VALIDATING_SNAPSHOT
+  PREPARING_ENGINES
+  RUNNING_ENGINES
+  FUSING_EVIDENCE
+  VALIDATING_RESULTS
+  COMPLETE
+}
+
+enum AnalysisEngine {
+  PRICE
+  DOCUMENT
+  GRAPH
+  TECHNICAL
+  COMPLETENESS
+  DATA_QUALITY
+  FUSION
+}
+
+enum AnalysisEventStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  WARNING
+  ABSTAINED
+  FAILED
+}
+
+enum EngineResultStatus {
+  SCORED
+  LOW_CONFIDENCE
+  ABSTAINED
+  NOT_APPLICABLE
+}
+
+model Organization {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  displayName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships        OrganizationMembership[]
+  packages           TenderPackage[]
+  vendors            Vendor[]
+  documents          Document[]
+  graphNodes         GraphNode[]
+  graphEdges         GraphEdge[]
+  sources            SourceRecord[]
+  auditEvents        AuditEvent[]
+  uploadIntents      UploadIntent[]
+  analysisJobs       AnalysisJob[]
+  canonicalSnapshots CanonicalSnapshot[]
+}
+
+model UserProfile {
+  id          String   @id @default(uuid()) @db.Uuid
+  authUserId  String   @unique @db.Uuid
+  email       String
+  displayName String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships           OrganizationMembership[]
+  caseAccess            CaseAccess[]
+  briefs                EvidenceBrief[]
+  reviews               ReviewDisposition[]
+  auditEvents           AuditEvent[]
+  uploadIntents         UploadIntent[]
+  requestedAnalysisJobs AnalysisJob[]
+}
+
+model OrganizationMembership {
+  organizationId String           @db.Uuid
+  userId         String           @db.Uuid
+  role           OrganizationRole
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+  @@index([userId])
+}
+
+model TenderPackage {
+  id                String        @id @default(uuid()) @db.Uuid
+  organizationId    String        @db.Uuid
+  sourceId          String
+  name              String
+  fiscalYear        Int
+  procurementMethod String
+  categoryCode      String?
+  buyerInstitution  String
+  buyerUnit         String?
+  regionCode        String?
+  announcedValue    Decimal?      @db.Decimal(20, 2)
+  hpsTotal          Decimal?      @db.Decimal(20, 2)
+  currency          String        @default("IDR")
+  bidDeadlineAt     DateTime
+  analysisCutoffAt  DateTime
+  workflowStage     WorkflowStage @default(INGESTING)
+  isSynthetic       Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  caseAccess         CaseAccess[]
+  participants       Participation[]
+  documents          Document[]
+  findings           Finding[]
+  briefs             EvidenceBrief[]
+  reviews            ReviewDisposition[]
+  graphEdges         GraphEdge[]
+  auditEvents        AuditEvent[]
+  uploadIntents      UploadIntent[]
+  analysisJobs       AnalysisJob[]
+  engineResults      EngineResult[]
+  canonicalSnapshots CanonicalSnapshot[]
+
+  @@unique([organizationId, sourceId])
+  @@index([organizationId, workflowStage])
+  @@index([analysisCutoffAt])
+}
+
+model CaseAccess {
+  id        String   @id @default(uuid()) @db.Uuid
+  packageId String   @db.Uuid
+  userId    String   @db.Uuid
+  role      CaseRole
+  createdAt DateTime @default(now())
+
+  package TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user    UserProfile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, userId])
+  @@index([userId])
+}
+
+model Vendor {
+  id               String   @id @default(uuid()) @db.Uuid
+  organizationId   String   @db.Uuid
+  providerSourceId String?
+  legalName        String
+  normalizedName   String
+  legalForm        String?
+  entityStatus     String?
+  nibToken         String?
+  addressNorm      String?
+  regionCode       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  participations Participation[]
+  documents      Document[]
+
+  @@unique([organizationId, normalizedName])
+  @@index([providerSourceId])
+}
+
+model Participation {
+  id                   String              @id @default(uuid()) @db.Uuid
+  packageId            String              @db.Uuid
+  vendorId             String              @db.Uuid
+  status               ParticipationStatus
+  submittedAt          DateTime?
+  bidTotal             Decimal?            @db.Decimal(20, 2)
+  evaluationStatus     String?
+  disqualificationCode String?
+  isWinner             Boolean?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  package TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  vendor  Vendor        @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+
+  @@unique([packageId, vendorId])
+  @@index([vendorId, submittedAt])
+}
+
+model Document {
+  id                  String             @id @default(uuid()) @db.Uuid
+  organizationId      String             @db.Uuid
+  packageId           String             @db.Uuid
+  vendorId            String?            @db.Uuid
+  type                DocumentType
+  originalFileName    String
+  storageKey          String             @unique
+  sha256              String
+  mimeType            String
+  byteSize            BigInt
+  pageCount           Int?
+  nativeTextAvailable Boolean?
+  ocrEngineVersion    String?
+  parserVersion       String?
+  classification      DataClassification
+  legalBasis          LegalBasisTag
+  retentionClass      RetentionClass
+  ingestStatus        IngestStatus       @default(QUARANTINED)
+  metadata            Json               @default("{}")
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  package           TenderPackage      @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  vendor            Vendor?            @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  passages          DocumentPassage[]
+  analysisJobs      AnalysisJob[]
+  uploadIntent      UploadIntent?
+  canonicalSnapshot CanonicalSnapshot?
+
+  @@unique([packageId, sha256])
+  @@index([organizationId, packageId, type])
+  @@index([ingestStatus])
+}
+
+model DocumentPassage {
+  id                     String   @id @default(uuid()) @db.Uuid
+  documentId             String   @db.Uuid
+  pageNumber             Int
+  bbox                   Json?
+  textRaw                String?
+  textRedacted           String?
+  textFingerprint        String
+  sectionLabel           String?
+  containsRestrictedData Boolean  @default(false)
+  boilerplateProbability Decimal? @db.Decimal(5, 4)
+  embeddingModelVersion  String?
+  createdAt              DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, pageNumber])
+}
+
+model SourceRecord {
+  id                   String         @id @default(uuid()) @db.Uuid
+  organizationId       String         @db.Uuid
+  entityType           String
+  entityId             String         @db.Uuid
+  sourceSystem         String
+  sourceRecordId       String
+  sourceUrlOrEndpoint  String
+  retrievedAt          DateTime
+  effectiveFrom        DateTime?
+  effectiveTo          DateTime?
+  rawPayloadHash       String
+  rawPayloadStorageKey String
+  parserVersion        String
+  fieldCompleteness    Decimal        @db.Decimal(5, 4)
+  qualityFlags         Json           @default("[]")
+  legalBasis           LegalBasisTag
+  licenseOrTermsId     String
+  retentionClass       RetentionClass
+  createdAt            DateTime       @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, entityType, entityId])
+  @@index([sourceSystem, sourceRecordId])
+}
+
+model Finding {
+  id                      String        @id @default(uuid()) @db.Uuid
+  packageId               String        @db.Uuid
+  type                    String
+  module                  FindingModule
+  moduleVersion           String
+  status                  FindingStatus @default(OPEN)
+  score                   Decimal?      @db.Decimal(6, 5)
+  confidence              Decimal?      @db.Decimal(6, 5)
+  featureSnapshotHash     String
+  sourceCitations         Json          @default("[]")
+  alternativeExplanations Json          @default("[]")
+  abstentionReason        String?
+  engineResultId          String?       @db.Uuid
+  externalFindingId       String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  package      TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  engineResult EngineResult? @relation(fields: [engineResultId], references: [id], onDelete: Cascade)
+
+  @@unique([engineResultId, externalFindingId])
+  @@index([packageId, module, status])
+}
+
+model UploadIntent {
+  id               String             @id @default(uuid()) @db.Uuid
+  organizationId   String             @db.Uuid
+  requestedById    String             @db.Uuid
+  packageId        String?            @db.Uuid
+  documentId       String?            @unique @db.Uuid
+  status           UploadIntentStatus @default(PENDING)
+  objectKey        String             @unique
+  originalFileName String
+  declaredMimeType String
+  declaredByteSize BigInt
+  expiresAt        DateTime
+  finalizedAt      DateTime?
+  rejectionCode    String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  requestedBy  UserProfile    @relation(fields: [requestedById], references: [id], onDelete: Restrict)
+  package      TenderPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  document     Document?      @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status, createdAt])
+  @@index([requestedById, createdAt])
+}
+
+model CanonicalSnapshot {
+  id              String   @id @default(uuid()) @db.Uuid
+  organizationId  String   @db.Uuid
+  packageId       String   @db.Uuid
+  documentId      String   @unique @db.Uuid
+  contractVersion String
+  snapshotHash    String
+  payload         Json
+  createdAt       DateTime @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  package      TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  document     Document      @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  analysisJobs AnalysisJob[]
+
+  @@unique([packageId, snapshotHash])
+  @@index([organizationId, createdAt])
+}
+
+model AnalysisJob {
+  id                        String            @id @default(uuid()) @db.Uuid
+  organizationId            String            @db.Uuid
+  packageId                 String            @db.Uuid
+  canonicalDocumentId       String            @db.Uuid
+  canonicalSnapshotId       String            @db.Uuid
+  retryOfId                 String?           @unique @db.Uuid
+  requestedById             String            @db.Uuid
+  runId                     String            @unique
+  status                    AnalysisJobStatus @default(QUEUED)
+  stage                     AnalysisJobStage  @default(QUEUED)
+  requestedEngines          AnalysisEngine[]
+  canonicalSnapshotHash     String
+  canonicalSnapshotLocation String
+  inputContractVersion      String
+  outputContractVersion     String
+  pipelineVersion           String
+  idempotencyKey            String
+  attempt                   Int               @default(0)
+  maxAttempts               Int               @default(3)
+  lease                     Json?
+  error                     Json?
+  availableAt               DateTime          @default(now())
+  startedAt                 DateTime?
+  completedAt               DateTime?
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  organization      Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  package           TenderPackage           @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  canonicalDocument Document                @relation(fields: [canonicalDocumentId], references: [id], onDelete: Restrict)
+  canonicalSnapshot CanonicalSnapshot       @relation(fields: [canonicalSnapshotId], references: [id], onDelete: Restrict)
+  retryOf           AnalysisJob?            @relation("AnalysisJobRetries", fields: [retryOfId], references: [id], onDelete: SetNull)
+  retry             AnalysisJob?            @relation("AnalysisJobRetries")
+  requestedBy       UserProfile             @relation(fields: [requestedById], references: [id], onDelete: Restrict)
+  progressEvents    AnalysisProgressEvent[]
+  results           EngineResult[]
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, status, availableAt])
+  @@index([packageId, createdAt])
+}
+
+model AnalysisProgressEvent {
+  id              String              @id @default(uuid()) @db.Uuid
+  jobId           String              @db.Uuid
+  externalEventId String
+  sequence        Int
+  engine          AnalysisEngine?
+  eventType       String
+  stage           String
+  status          AnalysisEventStatus
+  completedUnits  Int?
+  totalUnits      Int?
+  unitLabel       String?
+  message         String
+  findingCount    Int?
+  payload         Json
+  occurredAt      DateTime
+  createdAt       DateTime            @default(now())
+
+  job AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, externalEventId])
+  @@unique([jobId, sequence])
+  @@index([jobId, occurredAt])
+}
+
+model EngineResult {
+  id                String             @id @default(uuid()) @db.Uuid
+  jobId             String             @db.Uuid
+  packageId         String             @db.Uuid
+  externalResultId  String             @unique
+  runId             String
+  engine            AnalysisEngine
+  status            EngineResultStatus
+  score             Decimal?           @db.Decimal(6, 5)
+  confidence        Decimal?           @db.Decimal(6, 5)
+  engineVersion     String
+  modelVersion      String?
+  inputSnapshotHash String
+  payloadHash       String
+  payload           Json
+  createdAt         DateTime           @default(now())
+
+  job      AnalysisJob   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  package  TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  findings Finding[]
+
+  @@unique([jobId, engine])
+  @@index([packageId, createdAt])
+}
+
+model EvidenceBrief {
+  id            String      @id @default(uuid()) @db.Uuid
+  packageId     String      @db.Uuid
+  version       Int
+  status        BriefStatus @default(DRAFT)
+  generatedById String?     @db.Uuid
+  summary       String
+  content       Json
+  contentHash   String
+  approvedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  package     TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  generatedBy UserProfile?  @relation(fields: [generatedById], references: [id], onDelete: SetNull)
+
+  @@unique([packageId, version])
+}
+
+model ReviewDisposition {
+  id         String   @id @default(uuid()) @db.Uuid
+  packageId  String   @db.Uuid
+  reviewerId String   @db.Uuid
+  code       String
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  package  TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  reviewer UserProfile   @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+
+  @@index([packageId, createdAt])
+}
+
+model GraphNode {
+  id                  String             @id @default(uuid()) @db.Uuid
+  organizationId      String             @db.Uuid
+  type                String
+  label               String
+  canonicalEntityType String
+  canonicalEntityId   String             @db.Uuid
+  classification      DataClassification
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  outgoing     GraphEdge[]  @relation("GraphEdgeFrom")
+  incoming     GraphEdge[]  @relation("GraphEdgeTo")
+
+  @@unique([organizationId, canonicalEntityType, canonicalEntityId])
+  @@index([organizationId, type])
+}
+
+model GraphEdge {
+  id                String            @id @default(uuid()) @db.Uuid
+  organizationId    String            @db.Uuid
+  packageId         String?           @db.Uuid
+  fromNodeId        String            @db.Uuid
+  toNodeId          String            @db.Uuid
+  type              String
+  effectiveFrom     DateTime?
+  effectiveTo       DateTime?
+  verificationLevel VerificationLevel
+  evidenceCitations Json              @default("[]")
+  createdAt         DateTime          @default(now())
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  package      TenderPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  fromNode     GraphNode      @relation("GraphEdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode       GraphNode      @relation("GraphEdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, type])
+  @@index([fromNodeId, toNodeId])
+  @@index([packageId])
+}
+
+model AuditEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  actorUserId    String?  @db.Uuid
+  packageId      String?  @db.Uuid
+  action         String
+  targetType     String
+  targetId       String?
+  metadata       Json     @default("{}")
+  ipHash         String?
+  userAgentHash  String?
+  occurredAt     DateTime @default(now())
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor        UserProfile?   @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  package      TenderPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, occurredAt])
+  @@index([packageId, occurredAt])
+  @@index([actorUserId, occurredAt])
+}

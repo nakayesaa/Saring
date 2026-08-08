@@ -1,0 +1,58 @@
+{
+  "schema_version": "saring-price-engine-output-1.0.0",
+  "run_id": "AR:price-abstained-001",
+  "package_id": "SYN-LAPTOP-HYBRID-001",
+  "generated_at": "2025-09-19T18:00:30+07:00",
+  "details": [
+    {
+      "schema_version": "saring-price-engine-detail-1.0.0",
+      "detail_id": "DETAIL:PRICE:PART-SYN-V003:LAPTOP-BISNIS-16-512",
+      "run_id": "AR:price-abstained-001",
+      "package_id": "SYN-LAPTOP-HYBRID-001",
+      "target_id": "PRICE:PART-SYN-V003:LAPTOP-BISNIS-16-512",
+      "item_id": "LAPTOP-BISNIS-16-512",
+      "participation_id": "PART-SYN-V003",
+      "vendor_id": "SYN-V003",
+      "engine_version": "price-engine-1.0.0",
+      "model_artifact_id": "price-qreg-fixture-1.0.0",
+      "comparator_snapshot_id": "comparators-empty-2025-09-18",
+      "analysis_cutoff": "2025-09-19T18:00:00+07:00",
+      "status": "ABSTAINED",
+      "normalized_target": {
+        "description": "Laptop bisnis RAM 16 GB dan SSD 512 GB",
+        "category_code": "LAPTOP_BUSINESS",
+        "brand": null,
+        "model": null,
+        "part_number": null,
+        "condition": "NEW",
+        "specifications": { "ram_gb": 16, "storage_gb": 512 },
+        "configuration_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "resolution_level": "STRICT_CONFIGURATION"
+      },
+      "cohort": null,
+      "interval": null,
+      "quote": { "quoted_unit_price": 14500000, "quantity": 3000, "currency": "IDR", "hps_unit_price": 13200000 },
+      "assessment": null,
+      "confidence": {
+        "overall": 0,
+        "cohort_sufficiency": 0,
+        "field_completeness": 1,
+        "interval_specificity": 0,
+        "calibration_reliability": 0,
+        "limiting_factors": ["Fewer than eight valid comparators are available."]
+      },
+      "comparator_references": [],
+      "adjustments": [],
+      "exclusions": [],
+      "data_quality_flags": ["INSUFFICIENT_COMPARATORS"],
+      "alternative_explanations": [],
+      "evidence_locator_ids": ["LOC-QUOTE-SYN-V003"],
+      "abstention": {
+        "reason_code": "INSUFFICIENT_COMPARATORS",
+        "message": "Price Engine abstained because the minimum comparator gate was not met.",
+        "missing_or_failed_requirements": ["At least eight cutoff-safe comparable observations"],
+        "recoverable": true
+      }
+    }
+  ]
+}

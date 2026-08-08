@@ -1,0 +1,64 @@
+{
+  "schema_version": "saring-synthetic-price-training-1.0.0",
+  "generator_version": "1.0.0",
+  "row_count": 12040,
+  "catalog_configuration_count": 40,
+  "source_family_count": 4,
+  "date_min": "2023-01-02T03:00:00Z",
+  "date_max": "2026-07-30T09:00:00Z",
+  "price_min_idr": 13256000,
+  "price_median_idr": 24789500.0,
+  "price_mean_idr": 24778813.29,
+  "price_max_idr": 49240000,
+  "currency_values": [
+    "IDR"
+  ],
+  "unit_values": [
+    "UNIT"
+  ],
+  "condition_values": [
+    "NEW"
+  ],
+  "region_count": 11,
+  "seller_count": 96,
+  "missing_part_number_rows": 78,
+  "unknown_material_basis_rows": 739,
+  "partial_specification_rows": 173,
+  "post_cutoff_rows": 0,
+  "duplicate_record_ids": 0,
+  "split_rows": {
+    "train": 7705,
+    "validation": 1927,
+    "final_out_of_time_test": 2408
+  },
+  "non_missing_skus_by_split": {
+    "train": 40,
+    "validation": 40,
+    "final_out_of_time_test": 40
+  },
+  "minimum_non_missing_sku_observations": 296,
+  "prohibited_training_columns_present": [],
+  "checks": {
+    "expected_row_count": true,
+    "unique_record_ids": true,
+    "positive_prices": true,
+    "all_synthetic_marked": true,
+    "no_post_cutoff_evidence": true,
+    "all_catalog_skus_reach_each_split": true,
+    "no_prohibited_training_columns": true
+  },
+  "files": {
+    "price_training_observed_synthetic.csv.gz": {
+      "sha256": "9cdb789822f104c881176c4aa13789fb89b5118deea9011a14f5d84d51fb9763",
+      "bytes": 345714
+    },
+    "generation_truth_do_not_train.csv.gz": {
+      "sha256": "e5eef43a4521221955c98149174d25b2ebb8ba74807a43b79a0fb86907beb9be",
+      "bytes": 283298
+    },
+    "product_catalog.csv": {
+      "sha256": "5fa90cb3e441735ad8449095c4f47058104fda52a8226be5ade4a73162b59308",
+      "bytes": 13530
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "generator_version": "1.0.0",
+  "generation_seed": 20260808,
+  "status": "SYNTHETIC_ONLY",
+  "public_fact_boundary": "Public sources ground compatible product families, Indonesian price scale, VAT, CPI context, and exchange-rate context. Every observation and every DGP coefficient is synthetic.",
+  "time_window": {
+    "start": "2023-01",
+    "end": "2026-07"
+  },
+  "observations_per_sku_month": 7,
+  "vat_assumption": "When included, multiply synthetic pre-tax price by 1.11.",
+  "temporal_assumptions": {
+    "monthly_general_price_context": 0.0019,
+    "monthly_model_lifecycle_depreciation": -0.0025,
+    "lifecycle_floor": 0.88,
+    "q4_seasonal_multiplier": 1.012
+  },
+  "seller_markup_assumptions": {
+    "NATIONAL_DISTRIBUTOR": 0.045,
+    "AUTHORIZED_RESELLER": 0.07,
+    "VALUE_ADDED_RESELLER": 0.105
+  },
+  "service_bundle_cost_assumptions_idr": {
+    "NONE": 0,
+    "STANDARD_SETUP": 180000,
+    "SECURITY_SUITE": 520000,
+    "MANAGED_DEPLOYMENT": 1050000
+  },
+  "region_shipping_cost_assumptions_idr": {
+    "ID-JK": 0,
+    "ID-JB": 65000,
+    "ID-JT": 85000,
+    "ID-JI": 95000,
+    "ID-SU": 180000,
+    "ID-SS": 210000,
+    "ID-KI": 270000,
+    "ID-SN": 310000,
+    "ID-NT": 430000,
+    "ID-MA": 560000,
+    "ID-PA": 820000
+  },
+  "warranty_cost_assumptions_idr": {
+    "12": 0,
+    "24": 330000,
+    "36": 760000
+  },
+  "controlled_event_rates": {
+    "benign_premium_context": 0.009,
+    "promotional_discount": 0.006
+  },
+  "missingness_rates": {
+    "tax_basis_unknown": 0.018,
+    "shipping_basis_unknown": 0.025,
+    "installation_basis_unknown": 0.018,
+    "warranty_missing": 0.018,
+    "part_number_missing": 0.006,
+    "cpu_missing": 0.004,
+    "storage_text_missing": 0.004
+  },
+  "minimum_comparator_expectation": 8,
+  "prohibited_claims": [
+    "fraud probability",
+    "state loss",
+    "real market prevalence",
+    "automated procurement decision"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": "saring-price-engine-input-1.0.0",
+  "run_id": "AR:price-golden-001",
+  "package_id": "SYN-LAPTOP-HYBRID-001",
+  "analysis_cutoff": "2025-09-19T18:00:00+07:00",
+  "canonical_input_hash": "6c59d086cd1a41e2d3b8073a6e00a2f5d28a0fd6e9becca54376a2ae7e4d075f",
+  "requested_engine_version": "price-engine-1.0.0",
+  "comparator_snapshot_id": "comparators-fixture-2025-09-18",
+  "targets": [
+    {
+      "target_id": "PRICE:PART-SYN-V003:LAPTOP-BISNIS-16-512",
+      "item_id": "LAPTOP-BISNIS-16-512",
+      "participation_id": "PART-SYN-V003",
+      "participant_id": "PART-SYN-V003",
+      "vendor_id": "SYN-V003",
+      "description": "Laptop bisnis RAM 16 GB dan SSD 512 GB",
+      "quoted_unit_price": 14500000,
+      "quantity": 3000,
+      "unit": "UNIT",
+      "currency": "IDR",
+      "procurement_date": "2025-09-19T09:24:00+07:00",
+      "region_code": "ID-JK",
+      "normalized_product": {
+        "category_code": "LAPTOP_BUSINESS",
+        "brand": null,
+        "model": null,
+        "part_number": null,
+        "condition": "NEW",
+        "specifications": {
+          "ram_gb": 16,
+          "storage_gb": 512,
+          "storage_type": "SSD",
+          "condition": "NEW"
+        },
+        "configuration_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "resolution_level": "STRICT_CONFIGURATION"
+      },
+      "commercial_basis": {
+        "tax": "INCLUDED",
+        "shipping": "INCLUDED",
+        "installation": "UNKNOWN",
+        "configuration_service": "UNKNOWN",
+        "bundled_software_service": "UNKNOWN",
+        "warranty_months": 36,
+        "delivery_days": null,
+        "payment_terms_code": null
+      },
+      "hps_unit_price": 13200000,
+      "field_quality": {
+        "overall": 1,
+        "material_fields": {
+          "ram_gb": { "confidence": 1, "status": "REVIEWED", "locator_id": "LOC-ITEM-LAPTOP-BISNIS-16-512" },
+          "storage_gb": { "confidence": 1, "status": "REVIEWED", "locator_id": "LOC-ITEM-LAPTOP-BISNIS-16-512" }
+        }
+      },
+      "evidence_locator_ids": [
+        "LOC-QUOTE-SYN-V003",
+        "LOC-ITEM-LAPTOP-BISNIS-16-512",
+        "LOC-HPS-LAPTOP-BISNIS-16-512"
+      ]
+    }
+  ]
+}

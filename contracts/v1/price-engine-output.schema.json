@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/price-engine-output.schema.json",
+  "title": "SARING Price Engine Output v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "package_id", "generated_at", "details"],
+  "properties": {
+    "schema_version": { "const": "saring-price-engine-output-1.0.0" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "details": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "https://saring.local/contracts/v1/price-engine-detail.schema.json" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" }
+  }
+}

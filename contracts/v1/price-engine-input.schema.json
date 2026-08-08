@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/price-engine-input.schema.json",
+  "title": "SARING Price Engine Input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "package_id",
+    "analysis_cutoff",
+    "canonical_input_hash",
+    "requested_engine_version",
+    "comparator_snapshot_id",
+    "targets"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-price-engine-input-1.0.0" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "analysis_cutoff": { "$ref": "#/$defs/timestamp" },
+    "canonical_input_hash": { "$ref": "#/$defs/sha256" },
+    "requested_engine_version": { "type": "string", "minLength": 1 },
+    "comparator_snapshot_id": { "$ref": "#/$defs/id" },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/target" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "nullableString": { "type": ["string", "null"] },
+    "triState": { "enum": ["INCLUDED", "EXCLUDED", "UNKNOWN"] },
+    "scalar": { "type": ["string", "number", "boolean", "null"] },
+    "normalizedProduct": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category_code",
+        "brand",
+        "model",
+        "part_number",
+        "condition",
+        "specifications",
+        "configuration_fingerprint",
+        "resolution_level"
+      ],
+      "properties": {
+        "category_code": { "type": "string", "minLength": 1 },
+        "brand": { "$ref": "#/$defs/nullableString" },
+        "model": { "$ref": "#/$defs/nullableString" },
+        "part_number": { "$ref": "#/$defs/nullableString" },
+        "condition": { "enum": ["NEW", "USED", "REFURBISHED", "UNKNOWN"] },
+        "specifications": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/scalar" }
+        },
+        "configuration_fingerprint": { "$ref": "#/$defs/nullableString" },
+        "resolution_level": {
+          "enum": ["EXACT_SKU", "STRICT_CONFIGURATION", "RELAXED_CONFIGURATION", "UNRESOLVED"]
+        }
+      }
+    },
+    "commercialBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tax",
+        "shipping",
+        "installation",
+        "configuration_service",
+        "bundled_software_service",
+        "warranty_months",
+        "delivery_days",
+        "payment_terms_code"
+      ],
+      "properties": {
+        "tax": { "$ref": "#/$defs/triState" },
+        "shipping": { "$ref": "#/$defs/triState" },
+        "installation": { "$ref": "#/$defs/triState" },
+        "configuration_service": { "$ref": "#/$defs/triState" },
+        "bundled_software_service": { "$ref": "#/$defs/triState" },
+        "warranty_months": { "type": ["integer", "null"], "minimum": 0 },
+        "delivery_days": { "type": ["integer", "null"], "minimum": 0 },
+        "payment_terms_code": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "fieldQuality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "material_fields"],
+      "properties": {
+        "overall": { "type": "number", "minimum": 0, "maximum": 1 },
+        "material_fields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["confidence", "status", "locator_id"],
+            "properties": {
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+              "status": { "enum": ["EXTRACTED", "REVIEWED", "MISSING", "UNREADABLE"] },
+              "locator_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] }
+            }
+          }
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_id",
+        "item_id",
+        "participation_id",
+        "participant_id",
+        "vendor_id",
+        "description",
+        "quoted_unit_price",
+        "quantity",
+        "unit",
+        "currency",
+        "procurement_date",
+        "region_code",
+        "normalized_product",
+        "commercial_basis",
+        "hps_unit_price",
+        "field_quality",
+        "evidence_locator_ids"
+      ],
+      "properties": {
+        "target_id": { "$ref": "#/$defs/id" },
+        "item_id": { "$ref": "#/$defs/id" },
+        "participation_id": { "$ref": "#/$defs/id" },
+        "participant_id": { "$ref": "#/$defs/id" },
+        "vendor_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "description": { "type": "string", "minLength": 1 },
+        "quoted_unit_price": { "type": "number", "exclusiveMinimum": 0 },
+        "quantity": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "type": "string", "minLength": 1 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "procurement_date": { "$ref": "#/$defs/timestamp" },
+        "region_code": { "$ref": "#/$defs/nullableString" },
+        "normalized_product": { "$ref": "#/$defs/normalizedProduct" },
+        "commercial_basis": { "$ref": "#/$defs/commercialBasis" },
+        "hps_unit_price": { "type": ["number", "null"], "minimum": 0 },
+        "field_quality": { "$ref": "#/$defs/fieldQuality" },
+        "evidence_locator_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/evidence-brief.schema.json",
+  "title": "SARING Evidence Brief v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "brief_id",
+    "brief_version",
+    "package_id",
+    "run_id",
+    "analysis_cutoff_at",
+    "workflow_stage",
+    "status",
+    "review_priority",
+    "data_completeness_by_module",
+    "module_status",
+    "module_scores",
+    "module_confidences",
+    "finding_refs",
+    "source_citations",
+    "abstention_reasons",
+    "alternative_explanations",
+    "recommended_review_actions",
+    "limitations",
+    "audit_log_ref",
+    "narrative",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-evidence-brief-1.0.0" },
+    "brief_id": { "$ref": "#/$defs/id" },
+    "brief_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "analysis_cutoff_at": { "type": "string", "format": "date-time" },
+    "workflow_stage": { "enum": ["PRE_AWARD", "RETROSPECTIVE"] },
+    "status": { "enum": ["DRAFT", "READY_FOR_REVIEW", "APPROVED", "SUPERSEDED"] },
+    "review_priority": { "enum": ["HIGH", "MEDIUM", "LOW", "NO_SIGNIFICANT_ALERT", "INSUFFICIENT_DATA"] },
+    "data_completeness_by_module": { "$ref": "#/$defs/moduleNumberMap" },
+    "module_status": { "$ref": "#/$defs/moduleStatusMap" },
+    "module_scores": { "$ref": "#/$defs/moduleNullableNumberMap" },
+    "module_confidences": { "$ref": "#/$defs/moduleNullableNumberMap" },
+    "finding_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["result_id", "finding_id", "engine", "scope"],
+        "properties": {
+          "result_id": { "$ref": "#/$defs/id" },
+          "finding_id": { "$ref": "#/$defs/id" },
+          "engine": { "$ref": "#/$defs/moduleName" },
+          "scope": { "enum": ["PACKAGE", "VENDOR", "CROSS_VENDOR", "ITEM"] }
+        }
+      }
+    },
+    "source_citations": {
+      "type": "array",
+      "items": { "$ref": "https://saring.local/contracts/v1/evidence-locator.schema.json" }
+    },
+    "abstention_reasons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["module", "reason"],
+        "properties": {
+          "module": { "$ref": "#/$defs/moduleName" },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "alternative_explanations": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "recommended_review_actions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "CLARIFICATION_REQUESTED",
+          "CONFIRMED_FOR_FOLLOW_UP",
+          "BENIGN_EXPLANATION",
+          "INSUFFICIENT_DATA",
+          "EXTRACTION_CORRECTION",
+          "ENTITY_CORRECTION",
+          "NO_ISSUE_FOUND",
+          "ESCALATED_TO_APIP",
+          "REVIEW_COMPLETED"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "audit_log_ref": { "$ref": "#/$defs/id" },
+    "narrative": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text", "renderer", "model_provider", "model_version", "prompt_template_version",
+            "factuality_status", "structured_input_hash", "raw_output_hash"
+          ],
+          "properties": {
+            "text": { "type": "string", "minLength": 1 },
+            "renderer": { "enum": ["DETERMINISTIC_TEMPLATE", "CONSTRAINED_LLM"] },
+            "model_provider": { "type": ["string", "null"] },
+            "model_version": { "type": ["string", "null"] },
+            "prompt_template_version": { "type": ["string", "null"] },
+            "factuality_status": { "enum": ["VERIFIED", "FALLBACK_TEMPLATE", "REJECTED"] },
+            "structured_input_hash": { "$ref": "#/$defs/sha256" },
+            "raw_output_hash": { "$ref": "#/$defs/sha256" }
+          }
+        }
+      ]
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "review_priority": { "const": "INSUFFICIENT_DATA" } }, "required": ["review_priority"] },
+      "then": { "properties": { "abstention_reasons": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "READY_FOR_REVIEW" } }, "required": ["status"] },
+      "then": { "properties": { "source_citations": { "minItems": 1 } } }
+    }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "moduleName": { "enum": ["PRICE", "DOCUMENT", "GRAPH", "TECHNICAL", "COMPLETENESS", "DATA_QUALITY", "FUSION"] },
+    "moduleStatusMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["PRICE", "DOCUMENT", "GRAPH", "TECHNICAL", "COMPLETENESS", "DATA_QUALITY", "FUSION"],
+      "properties": {
+        "PRICE": { "$ref": "#/$defs/moduleStatus" },
+        "DOCUMENT": { "$ref": "#/$defs/moduleStatus" },
+        "GRAPH": { "$ref": "#/$defs/moduleStatus" },
+        "TECHNICAL": { "$ref": "#/$defs/moduleStatus" },
+        "COMPLETENESS": { "$ref": "#/$defs/moduleStatus" },
+        "DATA_QUALITY": { "$ref": "#/$defs/moduleStatus" },
+        "FUSION": { "$ref": "#/$defs/moduleStatus" }
+      }
+    },
+    "moduleStatus": { "enum": ["SCORED", "LOW_CONFIDENCE", "ABSTAINED", "NOT_APPLICABLE"] },
+    "moduleNumberMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["PRICE", "DOCUMENT", "GRAPH", "TECHNICAL", "COMPLETENESS", "DATA_QUALITY", "FUSION"],
+      "properties": {
+        "PRICE": { "$ref": "#/$defs/unitNumber" },
+        "DOCUMENT": { "$ref": "#/$defs/unitNumber" },
+        "GRAPH": { "$ref": "#/$defs/unitNumber" },
+        "TECHNICAL": { "$ref": "#/$defs/unitNumber" },
+        "COMPLETENESS": { "$ref": "#/$defs/unitNumber" },
+        "DATA_QUALITY": { "$ref": "#/$defs/unitNumber" },
+        "FUSION": { "$ref": "#/$defs/unitNumber" }
+      }
+    },
+    "moduleNullableNumberMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["PRICE", "DOCUMENT", "GRAPH", "TECHNICAL", "COMPLETENESS", "DATA_QUALITY", "FUSION"],
+      "properties": {
+        "PRICE": { "$ref": "#/$defs/nullableUnitNumber" },
+        "DOCUMENT": { "$ref": "#/$defs/nullableUnitNumber" },
+        "GRAPH": { "$ref": "#/$defs/nullableUnitNumber" },
+        "TECHNICAL": { "$ref": "#/$defs/nullableUnitNumber" },
+        "COMPLETENESS": { "$ref": "#/$defs/nullableUnitNumber" },
+        "DATA_QUALITY": { "$ref": "#/$defs/nullableUnitNumber" },
+        "FUSION": { "$ref": "#/$defs/nullableUnitNumber" }
+      }
+    },
+    "unitNumber": { "type": "number", "minimum": 0, "maximum": 1 },
+    "nullableUnitNumber": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+  }
+}

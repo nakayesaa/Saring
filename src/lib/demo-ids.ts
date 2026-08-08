@@ -1,0 +1,1 @@
+export const GOLDEN_PACKAGE_ID = "SYN-LAPTOP-HYBRID-001";

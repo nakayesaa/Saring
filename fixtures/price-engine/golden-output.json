@@ -1,0 +1,102 @@
+{
+  "schema_version": "saring-price-engine-output-1.0.0",
+  "run_id": "AR:price-golden-001",
+  "package_id": "SYN-LAPTOP-HYBRID-001",
+  "generated_at": "2025-09-19T18:00:30+07:00",
+  "details": [
+    {
+      "schema_version": "saring-price-engine-detail-1.0.0",
+      "detail_id": "DETAIL:PRICE:PART-SYN-V003:LAPTOP-BISNIS-16-512",
+      "run_id": "AR:price-golden-001",
+      "package_id": "SYN-LAPTOP-HYBRID-001",
+      "target_id": "PRICE:PART-SYN-V003:LAPTOP-BISNIS-16-512",
+      "item_id": "LAPTOP-BISNIS-16-512",
+      "participation_id": "PART-SYN-V003",
+      "vendor_id": "SYN-V003",
+      "engine_version": "price-engine-1.0.0",
+      "model_artifact_id": "price-qreg-fixture-1.0.0",
+      "comparator_snapshot_id": "comparators-fixture-2025-09-18",
+      "analysis_cutoff": "2025-09-19T18:00:00+07:00",
+      "status": "SCORED",
+      "normalized_target": {
+        "description": "Laptop bisnis RAM 16 GB dan SSD 512 GB",
+        "category_code": "LAPTOP_BUSINESS",
+        "brand": null,
+        "model": null,
+        "part_number": null,
+        "condition": "NEW",
+        "specifications": { "ram_gb": 16, "storage_gb": 512, "storage_type": "SSD", "condition": "NEW" },
+        "configuration_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "resolution_level": "STRICT_CONFIGURATION"
+      },
+      "cohort": {
+        "cohort_level": "STRICT_CONFIGURATION",
+        "comparator_count": 13,
+        "source_count": 3,
+        "seller_count": 9,
+        "region_count": 4,
+        "observation_date_min": "2025-06-15T10:00:00+07:00",
+        "observation_date_max": "2025-08-15T10:00:00+07:00",
+        "included_observation_ids": ["OBS-LAPTOP-001", "OBS-LAPTOP-002", "OBS-LAPTOP-003", "OBS-LAPTOP-004", "OBS-LAPTOP-005", "OBS-LAPTOP-006", "OBS-LAPTOP-007", "OBS-LAPTOP-008", "OBS-LAPTOP-009", "OBS-LAPTOP-010", "OBS-LAPTOP-011", "OBS-LAPTOP-012", "OBS-LAPTOP-013"],
+        "excluded_count_by_reason": { "COMMERCIAL_BASIS_MISMATCH": 2 },
+        "deduplication_policy_version": "price-dedup-1.0.0",
+        "retrieval_policy_version": "price-retrieval-1.0.0"
+      },
+      "interval": {
+        "currency": "IDR",
+        "q10": 10800000,
+        "q50": 11200000,
+        "q90": 12600000,
+        "method": "QUANTILE_REGRESSION",
+        "calibration_status": "CALIBRATED",
+        "calibration_scope": "LAPTOP_BUSINESS:STRICT_CONFIGURATION"
+      },
+      "quote": { "quoted_unit_price": 14500000, "quantity": 3000, "currency": "IDR", "hps_unit_price": 13200000 },
+      "assessment": {
+        "position": "ABOVE_Q90",
+        "relative_deviation_above_q90": 0.15079365079365079,
+        "unit_difference_above_q90": 1900000,
+        "estimated_exposure_requiring_verification": 5700000000,
+        "review_priority_score": 0.15079365079365079
+      },
+      "confidence": {
+        "overall": 0.3636904761904762,
+        "cohort_sufficiency": 0.43333333333333335,
+        "field_completeness": 1,
+        "interval_specificity": 0.8392857142857143,
+        "calibration_reliability": 1,
+        "limiting_factors": ["Synthetic fixture comparators; production market evidence is not connected."]
+      },
+      "comparator_references": [
+        {
+          "observation_id": "OBS-LAPTOP-001",
+          "rank": 1,
+          "similarity_score": 0.98,
+          "normalized_unit_price": 10950000,
+          "currency": "IDR",
+          "observed_at": "2025-06-15T10:00:00+07:00",
+          "cohort_level": "STRICT_CONFIGURATION",
+          "material_differences": [],
+          "commercial_basis_differences": [],
+          "locator_id": "LOC-COMP-001"
+        }
+      ],
+      "adjustments": [],
+      "exclusions": [
+        { "observation_id": "OBS-LAPTOP-014", "reason_code": "COMMERCIAL_BASIS_MISMATCH", "detail": "Warranty basis differs." },
+        { "observation_id": "OBS-LAPTOP-015", "reason_code": "COMMERCIAL_BASIS_MISMATCH", "detail": "Service bundle is unresolved." }
+      ],
+      "data_quality_flags": ["SYNTHETIC_FIXTURE"],
+      "alternative_explanations": [
+        {
+          "code": "INSTALLATION_CONFIGURATION",
+          "label": "Konfigurasi atau layanan tambahan",
+          "basis": "Komponen konfigurasi dan instalasi belum seluruhnya diketahui.",
+          "locator_id": "LOC-QUOTE-SYN-V003"
+        }
+      ],
+      "evidence_locator_ids": ["LOC-QUOTE-SYN-V003", "LOC-ITEM-LAPTOP-BISNIS-16-512", "LOC-HPS-LAPTOP-BISNIS-16-512", "LOC-COMP-001"],
+      "abstention": null
+    }
+  ]
+}

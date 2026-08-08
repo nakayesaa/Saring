@@ -1,0 +1,11 @@
+{
+  "schema_version": "saring-price-engine-input-1.0.0",
+  "run_id": "AR:price-invalid-001",
+  "package_id": "SYN-LAPTOP-HYBRID-001",
+  "analysis_cutoff": "2025-09-19T18:00:00+07:00",
+  "canonical_input_hash": "6c59d086cd1a41e2d3b8073a6e00a2f5d28a0fd6e9becca54376a2ae7e4d075f",
+  "requested_engine_version": "price-engine-1.0.0",
+  "comparator_snapshot_id": "comparators-fixture-2025-09-18",
+  "targets": [],
+  "unexpected_field": "must be rejected"
+}

@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/canonical-package.schema.json",
+  "title": "SARING Canonical Package v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package",
+    "items",
+    "requirements",
+    "participants",
+    "documents",
+    "historical_participation",
+    "quality",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-canonical-package-1.0.0" },
+    "package": { "$ref": "#/$defs/package" },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "requirements": { "type": "array", "items": { "$ref": "#/$defs/requirement" } },
+    "participants": { "type": "array", "items": { "$ref": "#/$defs/participant" } },
+    "documents": { "type": "array", "items": { "$ref": "#/$defs/document" } },
+    "historical_participation": { "type": "array", "items": { "$ref": "#/$defs/historicalEvent" } },
+    "quality": { "$ref": "#/$defs/quality" },
+    "provenance": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/provenance" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "nullableString": { "type": ["string", "null"] },
+    "nullableNumber": { "type": ["number", "null"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "money": { "type": "number", "minimum": 0 },
+    "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_id",
+        "source_id",
+        "name",
+        "fiscal_year",
+        "procurement_method",
+        "category_code",
+        "buyer",
+        "region_code",
+        "hps_total",
+        "currency",
+        "bid_deadline_at",
+        "analysis_cutoff_at",
+        "workflow_stage",
+        "bundle_mode",
+        "participant_count"
+      ],
+      "properties": {
+        "package_id": { "$ref": "#/$defs/id" },
+        "source_id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "fiscal_year": { "type": "integer", "minimum": 2000, "maximum": 2200 },
+        "procurement_method": { "type": "string", "minLength": 1 },
+        "category_code": { "$ref": "#/$defs/nullableString" },
+        "buyer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["institution_id", "institution_name", "unit_id", "unit_name"],
+          "properties": {
+            "institution_id": { "$ref": "#/$defs/id" },
+            "institution_name": { "type": "string", "minLength": 1 },
+            "unit_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+            "unit_name": { "$ref": "#/$defs/nullableString" }
+          }
+        },
+        "region_code": { "$ref": "#/$defs/nullableString" },
+        "hps_total": { "anyOf": [{ "$ref": "#/$defs/money" }, { "type": "null" }] },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "bid_deadline_at": { "$ref": "#/$defs/timestamp" },
+        "analysis_cutoff_at": { "$ref": "#/$defs/timestamp" },
+        "workflow_stage": { "enum": ["PRE_AWARD", "RETROSPECTIVE"] },
+        "bundle_mode": { "enum": ["LIVE_AUTHORIZED", "RETROSPECTIVE", "SYNTHETIC"] },
+        "participant_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item_id", "description", "brand", "model", "part_number", "quantity", "unit",
+        "hps_unit_price", "specifications", "tax_included", "shipping_included",
+        "installation_included", "warranty_months", "source_record_id"
+      ],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/id" },
+        "description": { "type": "string", "minLength": 1 },
+        "brand": { "$ref": "#/$defs/nullableString" },
+        "model": { "$ref": "#/$defs/nullableString" },
+        "part_number": { "$ref": "#/$defs/nullableString" },
+        "quantity": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "type": "string", "minLength": 1 },
+        "hps_unit_price": { "anyOf": [{ "$ref": "#/$defs/money" }, { "type": "null" }] },
+        "specifications": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean", "null"] } },
+        "tax_included": { "enum": [true, false, "UNKNOWN"] },
+        "shipping_included": { "enum": [true, false, "UNKNOWN"] },
+        "installation_included": { "enum": [true, false, "UNKNOWN"] },
+        "warranty_months": { "type": ["integer", "null"], "minimum": 0 },
+        "source_record_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirement_id", "category", "field", "operator", "expected_value", "status", "source_record_id"],
+      "properties": {
+        "requirement_id": { "$ref": "#/$defs/id" },
+        "category": { "type": "string", "minLength": 1 },
+        "field": { "type": "string", "minLength": 1 },
+        "operator": { "enum": ["EQUAL", "MINIMUM", "MAXIMUM", "CONTAINS", "REQUIRED", "NOT_REQUIRED"] },
+        "expected_value": { "type": ["string", "number", "boolean", "null"] },
+        "status": { "enum": ["REQUIRED", "OPTIONAL", "NOT_APPLICABLE", "MISSING", "UNREADABLE"] },
+        "source_record_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["participation_id", "vendor", "status", "submitted_at", "bid_total", "items", "document_ids", "entity_resolution"],
+      "properties": {
+        "participation_id": { "$ref": "#/$defs/id" },
+        "vendor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["vendor_id", "source_id", "legal_name", "normalized_name"],
+          "properties": {
+            "vendor_id": { "$ref": "#/$defs/id" },
+            "source_id": { "$ref": "#/$defs/nullableString" },
+            "legal_name": { "type": "string", "minLength": 1 },
+            "normalized_name": { "type": "string", "minLength": 1 }
+          }
+        },
+        "status": { "enum": ["REGISTERED", "SUBMITTED", "WITHDRAWN", "DISQUALIFIED", "EVALUATED", "AWARDED"] },
+        "submitted_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+        "bid_total": { "anyOf": [{ "$ref": "#/$defs/money" }, { "type": "null" }] },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["item_id", "offered_unit_price", "quantity", "offered_specifications"],
+            "properties": {
+              "item_id": { "$ref": "#/$defs/id" },
+              "offered_unit_price": { "anyOf": [{ "$ref": "#/$defs/money" }, { "type": "null" }] },
+              "quantity": { "type": "number", "exclusiveMinimum": 0 },
+              "offered_specifications": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean", "null"] } }
+            }
+          }
+        },
+        "document_ids": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "entity_resolution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "confidence", "reviewed"],
+          "properties": {
+            "status": { "enum": ["RESOLVED", "LOW_CONFIDENCE", "UNRESOLVED"] },
+            "confidence": { "$ref": "#/$defs/confidence" },
+            "reviewed": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["document_id", "vendor_id", "document_type", "file_name", "sha256", "mime_type", "byte_size", "page_count", "native_text_available", "ingest_status", "classification"],
+      "properties": {
+        "document_id": { "$ref": "#/$defs/id" },
+        "vendor_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "document_type": { "enum": ["MANIFEST", "PACKAGE_METADATA", "HPS", "SELECTION", "SPECIFICATION", "ADMINISTRATIVE_BID", "TECHNICAL_BID", "COMMERCIAL_BID", "EVALUATION", "NEGOTIATION", "MARKET_COMPARATOR", "OTHER"] },
+        "file_name": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mime_type": { "type": "string", "minLength": 1 },
+        "byte_size": { "type": "integer", "minimum": 0 },
+        "page_count": { "type": ["integer", "null"], "minimum": 1 },
+        "native_text_available": { "type": ["boolean", "null"] },
+        "ingest_status": { "enum": ["QUARANTINED", "VALIDATED", "PARSING", "PARSED", "NEEDS_REVIEW", "REJECTED"] },
+        "classification": { "enum": ["PUBLIC", "INTERNAL", "RESTRICTED", "PERSONAL_RESTRICTED", "SYNTHETIC"] }
+      }
+    },
+    "historicalEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "package_id", "vendor_id", "buyer_institution_id", "buyer_unit_id", "event_type", "occurred_at", "source_record_id"],
+      "properties": {
+        "event_id": { "$ref": "#/$defs/id" },
+        "package_id": { "$ref": "#/$defs/id" },
+        "vendor_id": { "$ref": "#/$defs/id" },
+        "buyer_institution_id": { "$ref": "#/$defs/id" },
+        "buyer_unit_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "event_type": { "enum": ["PARTICIPATED", "AWARDED"] },
+        "occurred_at": { "$ref": "#/$defs/timestamp" },
+        "source_record_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completeness_by_module", "quality_flags", "low_confidence_field_count", "unresolved_entity_count"],
+      "properties": {
+        "completeness_by_module": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["price", "document", "graph", "technical", "completeness", "data_quality"],
+          "properties": {
+            "price": { "$ref": "#/$defs/confidence" },
+            "document": { "$ref": "#/$defs/confidence" },
+            "graph": { "$ref": "#/$defs/confidence" },
+            "technical": { "$ref": "#/$defs/confidence" },
+            "completeness": { "$ref": "#/$defs/confidence" },
+            "data_quality": { "$ref": "#/$defs/confidence" }
+          }
+        },
+        "quality_flags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "low_confidence_field_count": { "type": "integer", "minimum": 0 },
+        "unresolved_entity_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "source_system", "source_record_id", "retrieved_at", "effective_at", "raw_payload_hash", "raw_payload_location", "parser_version", "legal_basis_tag", "retention_class"],
+      "properties": {
+        "record_id": { "$ref": "#/$defs/id" },
+        "source_system": { "type": "string", "minLength": 1 },
+        "source_record_id": { "type": "string", "minLength": 1 },
+        "retrieved_at": { "$ref": "#/$defs/timestamp" },
+        "effective_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+        "raw_payload_hash": { "$ref": "#/$defs/sha256" },
+        "raw_payload_location": { "type": "string", "minLength": 1 },
+        "parser_version": { "type": "string", "minLength": 1 },
+        "legal_basis_tag": { "enum": ["PUBLIC_INFORMATION", "AUTHORIZED_PROCUREMENT", "CONSENT", "DSA", "SYNTHETIC"] },
+        "retention_class": { "enum": ["PUBLIC_ARCHIVE", "PROCUREMENT_CASE", "PERSONAL_RESTRICTED", "TEMPORARY_ENRICHMENT"] }
+      }
+    }
+  }
+}

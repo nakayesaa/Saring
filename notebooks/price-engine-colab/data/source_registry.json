@@ -1,0 +1,79 @@
+{
+  "registry_version": "1.0.0",
+  "accessed_at": "2026-08-08",
+  "notice": "Sources ground facts and context only; no source is represented as the origin of synthetic prices.",
+  "sources": [
+    {
+      "source_id": "LENOVO_T14_G4_PSREF",
+      "publisher": "Lenovo",
+      "title": "ThinkPad T14 Gen 4 (Intel) Product Specifications Reference",
+      "url": "https://psref.lenovo.com/syspool/Sys/PDF/ThinkPad/ThinkPad_T14_Gen_4_Intel/ThinkPad_T14_Gen_4_Intel_Spec.PDF",
+      "role": "Product-family CPU, memory, storage, display, and operating-system compatibility grounding",
+      "price_role": "NONE"
+    },
+    {
+      "source_id": "LENOVO_THINKBOOK14_G4",
+      "publisher": "Lenovo Indonesia",
+      "title": "ThinkBook 14 Gen 4 (14-inch Intel)",
+      "url": "https://www.lenovo.com/id/id/p/laptops/thinkbook/thinkbook-series/thinkbook-14-gen-4-14-inch-intel/len101b0012",
+      "role": "Product-family processor, memory, storage, display, and Windows configuration grounding",
+      "price_role": "NONE"
+    },
+    {
+      "source_id": "DELL_LATITUDE5440_PROCESSOR",
+      "publisher": "Dell",
+      "title": "Latitude 5440 Owner's Manual - Processor",
+      "url": "https://www.dell.com/support/manuals/en-us/latitude-14-5440-laptop/latitude-5440-owners-manual/processor?guid=guid-ad7c8a38-3bb0-4679-9294-ddea65ea6f71&lang=en-us",
+      "role": "Latitude 5440 processor compatibility grounding",
+      "price_role": "NONE"
+    },
+    {
+      "source_id": "DELL_LATITUDE5440_DISPLAY",
+      "publisher": "Dell",
+      "title": "Latitude 5440 Owner's Manual - Display",
+      "url": "https://www.dell.com/support/manuals/en-us/latitude-14-5440-laptop/latitude-5440-owners-manual/display?guid=guid-5579fc11-9b22-44fa-ba0d-ae67ba34e9f8&lang=en-us",
+      "role": "Latitude 5440 14-inch FHD display grounding",
+      "price_role": "NONE"
+    },
+    {
+      "source_id": "HP_PROBOOK440_G10",
+      "publisher": "HP",
+      "title": "HP ProBook 440 14 inch G10 Notebook PC specifications",
+      "url": "https://support.hp.com/in-en/document/ish_7795769-7795857-16",
+      "role": "ProBook 440 G10 processor, memory, storage, and display compatibility grounding",
+      "price_role": "NONE"
+    },
+    {
+      "source_id": "ACER_OFFICIAL_ID_BUSINESS",
+      "publisher": "Acer Official Store Indonesia",
+      "title": "For Business laptop catalogue",
+      "url": "https://store.acer.com/en-id/acer-for-business",
+      "role": "Public Indonesian laptop price-scale sanity anchor; not copied into observations",
+      "price_role": "SCALE_ONLY"
+    },
+    {
+      "source_id": "DJP_PPN_11_2022",
+      "publisher": "Direktorat Jenderal Pajak",
+      "title": "Reformasi PPN Kedepankan Rasa Keadilan",
+      "url": "https://pajak.go.id/id/siaran-pers/reformasi-ppn-kedepankan-rasa-keadilan",
+      "role": "11 percent VAT context effective 1 April 2022",
+      "price_role": "TAX_CONTEXT"
+    },
+    {
+      "source_id": "BPS_CPI_2024",
+      "publisher": "Badan Pusat Statistik",
+      "title": "Consumer Price Index of 150 Regencies/Municipalities in Indonesia 2024 (2022=100)",
+      "url": "https://www.bps.go.id/id/publication/2025/04/10/760f01390477b1248214ac76/consumer-price-index-of-150-regencies-municipalities-in-indonesia-2024--2022-100-.html",
+      "role": "Temporal price-context grounding; generator coefficients remain synthetic assumptions",
+      "price_role": "TEMPORAL_CONTEXT"
+    },
+    {
+      "source_id": "BI_JISDOR_METHOD",
+      "publisher": "Bank Indonesia",
+      "title": "JISDOR, reference rates, and BI transaction rates",
+      "url": "https://www.bi.go.id/id/fungsi-utama/moneter/informasi-kurs/default.aspx",
+      "role": "Imported-component currency-context grounding; no daily exchange-rate values are copied",
+      "price_role": "CURRENCY_CONTEXT"
+    }
+  ]
+}

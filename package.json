@@ -1,0 +1,55 @@
+{
+  "name": "saring-web",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "contracts:check": "node scripts/check-price-contracts.mjs",
+    "check": "npm run contracts:check && npm run db:validate && npm run db:generate && npm run lint && npm run typecheck",
+    "db:validate": "prisma validate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:policies": "node scripts/apply-database-policies.mjs",
+    "db:setup": "npm run db:deploy && npm run db:policies",
+    "db:studio": "prisma studio",
+    "db:bootstrap": "node scripts/bootstrap-workspace.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
+    "@supabase/ssr": "0.12.4",
+    "@supabase/supabase-js": "2.112.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "dotenv": "^17.4.2",
+    "lucide-react": "1.28.0",
+    "next": "16.3.0",
+    "pg": "8.22.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "yauzl": "^3.4.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/pg": "8.20.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/yauzl": "^3.4.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.0",
+    "prisma": "7.9.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

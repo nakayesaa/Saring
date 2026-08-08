@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/price-training-manifest.schema.json",
+  "title": "SARING Price Training Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "dataset_id",
+    "dataset_version",
+    "created_at",
+    "currency_policy",
+    "observation_count",
+    "observation_schema_version",
+    "source_snapshot_cutoff",
+    "content_hash",
+    "split_policy"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-price-training-manifest-1.0.0" },
+    "dataset_id": { "$ref": "#/$defs/id" },
+    "dataset_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "currency_policy": { "enum": ["IDR_ONLY", "NORMALIZED_TO_IDR"] },
+    "observation_count": { "type": "integer", "minimum": 1 },
+    "observation_schema_version": { "const": "saring-price-observation-1.0.0" },
+    "source_snapshot_cutoff": { "$ref": "#/$defs/timestamp" },
+    "content_hash": { "$ref": "#/$defs/sha256" },
+    "split_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "train_end", "validation_end", "final_test_end"],
+      "properties": {
+        "type": { "const": "CHRONOLOGICAL" },
+        "train_end": { "type": "string", "format": "date" },
+        "validation_end": { "type": "string", "format": "date" },
+        "final_test_end": { "type": "string", "format": "date" }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

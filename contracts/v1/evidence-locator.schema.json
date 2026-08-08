@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/evidence-locator.schema.json",
+  "title": "SARING Evidence Locator v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "locator_id",
+    "package_id",
+    "source_type",
+    "source_hash"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-evidence-locator-1.0.0" },
+    "locator_id": { "$ref": "#/$defs/id" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "source_type": {
+      "enum": [
+        "DOCUMENT_PAGE",
+        "DOCUMENT_REGION",
+        "JSON_PATH",
+        "TABLE_CELL",
+        "GRAPH_EDGE",
+        "DATABASE_RECORD",
+        "EXTERNAL_RECORD"
+      ]
+    },
+    "source_hash": { "$ref": "#/$defs/sha256" },
+    "document_id": { "$ref": "#/$defs/id" },
+    "page_number": { "type": "integer", "minimum": 1 },
+    "bbox": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "json_path": { "type": "string", "minLength": 1 },
+    "table_name": { "type": "string", "minLength": 1 },
+    "row_key": { "type": "string", "minLength": 1 },
+    "column_name": { "type": "string", "minLength": 1 },
+    "graph_edge_id": { "$ref": "#/$defs/id" },
+    "record_type": { "type": "string", "minLength": 1 },
+    "record_id": { "$ref": "#/$defs/id" },
+    "source_system": { "type": "string", "minLength": 1 },
+    "source_record_id": { "type": "string", "minLength": 1 },
+    "excerpt": { "type": "string", "maxLength": 1000 },
+    "label": { "type": "string", "minLength": 1, "maxLength": 200 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "source_type": { "const": "DOCUMENT_PAGE" } }, "required": ["source_type"] },
+      "then": { "required": ["document_id", "page_number"] }
+    },
+    {
+      "if": { "properties": { "source_type": { "const": "DOCUMENT_REGION" } }, "required": ["source_type"] },
+      "then": { "required": ["document_id", "page_number", "bbox"] }
+    },
+    {
+      "if": { "properties": { "source_type": { "const": "JSON_PATH" } }, "required": ["source_type"] },
+      "then": { "required": ["json_path"] }
+    },
+    {
+      "if": { "properties": { "source_type": { "const": "TABLE_CELL" } }, "required": ["source_type"] },
+      "then": { "required": ["table_name", "row_key", "column_name"] }
+    },
+    {
+      "if": { "properties": { "source_type": { "const": "GRAPH_EDGE" } }, "required": ["source_type"] },
+      "then": { "required": ["graph_edge_id"] }
+    },
+    {
+      "if": { "properties": { "source_type": { "const": "DATABASE_RECORD" } }, "required": ["source_type"] },
+      "then": { "required": ["record_type", "record_id"] }
+    },
+    {
+      "if": { "properties": { "source_type": { "const": "EXTERNAL_RECORD" } }, "required": ["source_type"] },
+      "then": { "required": ["source_system", "source_record_id"] }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$"
+    }
+  }
+}
