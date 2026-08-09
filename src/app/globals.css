@@ -12,8 +12,9 @@
 
   --shell-viewport: #eef0f3;
   --shell-canvas: #bcc6d5;
-  --shell-workspace: #ffffff;
-  --shell-sidebar: #0b1b43;
+  --shell-workspace: #f1f2f0;
+  --shell-sidebar: #fcfcfb;
+  --shell-sidebar-hover: #eef3ff;
   --shell-surface: #ffffff;
   --shell-surface-raised: #f5f5f4;
   --shell-surface-hover: #eeeeed;
@@ -163,7 +164,7 @@ textarea:focus-visible {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  color: var(--shell-muted);
+  color: var(--shell-text-soft);
   background: var(--shell-sidebar);
   opacity: 1;
   transition:
@@ -256,11 +257,11 @@ textarea:focus-visible {
   flex: 1;
   align-items: center;
   gap: 12px;
-  color: #f3f6fc;
+  color: var(--shell-text);
 }
 
 .product-brand:hover {
-  color: #ffffff;
+  color: var(--shell-blue);
 }
 
 .product-brand-mark {
@@ -269,7 +270,7 @@ textarea:focus-visible {
   height: 40px;
   flex: 0 0 40px;
   place-items: center;
-  color: #ffffff;
+  color: var(--shell-text);
 }
 
 .product-brand-mark svg {
@@ -279,7 +280,7 @@ textarea:focus-visible {
 
 .product-brand-name {
   overflow: hidden;
-  color: #f3f6fc;
+  color: var(--shell-text);
   font-size: 22px;
   font-weight: 650;
   letter-spacing: -0.01em;
@@ -295,14 +296,14 @@ textarea:focus-visible {
   place-items: center;
   border: 1px solid transparent;
   border-radius: var(--shell-radius-sm);
-  color: #91a0bd;
+  color: var(--shell-muted);
   background: transparent;
 }
 
 .product-icon-button:hover {
-  border-color: #314671;
-  color: #ffffff;
-  background: #142957;
+  border-color: var(--shell-border);
+  color: var(--shell-blue);
+  background: var(--shell-sidebar-hover);
 }
 
 .product-sidebar-scroll {
@@ -335,7 +336,7 @@ textarea:focus-visible {
 .product-nav-label {
   height: 44px;
   padding: 0 12px;
-  color: #8797b6;
+  color: var(--shell-muted);
   font-size: 18px;
   font-weight: 680;
   line-height: 44px;
@@ -356,7 +357,7 @@ textarea:focus-visible {
   padding: 0 13px;
   overflow: hidden;
   border-radius: var(--shell-radius-sm);
-  color: #cbd5e8;
+  color: var(--shell-text-soft);
   background: transparent;
   font-size: 20px;
   font-weight: 580;
@@ -367,7 +368,7 @@ textarea:focus-visible {
   flex: 0 0 auto;
   width: 22px;
   height: 22px;
-  color: #8798b8;
+  color: var(--shell-muted);
 }
 
 .product-nav-link > span {
@@ -377,15 +378,15 @@ textarea:focus-visible {
 
 .product-nav-link > small {
   margin-left: auto;
-  color: #8495b4;
+  color: var(--shell-muted);
   font-size: 16px;
   font-weight: 620;
   font-variant-numeric: tabular-nums;
 }
 
 .product-nav-link:hover {
-  color: #ffffff;
-  background: #142957;
+  color: var(--shell-blue);
+  background: var(--shell-sidebar-hover);
 }
 
 .product-nav-link.active {
@@ -402,16 +403,16 @@ textarea:focus-visible {
 .product-nav-divider {
   height: 1px;
   margin: 9px 8px;
-  background: #263b68;
+  background: var(--shell-border-soft);
 }
 
 .product-nav-disabled {
-  color: #7182a1;
+  color: var(--shell-muted-dark);
   cursor: default;
 }
 
 .product-nav-disabled:hover {
-  color: #7182a1;
+  color: var(--shell-muted-dark);
   background: transparent;
 }
 
@@ -433,14 +434,14 @@ textarea:focus-visible {
   padding: 0 12px;
   border: 1px solid transparent;
   border-radius: var(--shell-radius-sm);
-  color: #aebbd2;
+  color: var(--shell-muted);
   background: transparent;
   text-align: left;
 }
 
 .product-profile:hover {
-  border-color: #314671;
-  background: #142957;
+  border-color: var(--shell-border);
+  background: var(--shell-sidebar-hover);
 }
 
 .product-avatar {
@@ -449,10 +450,10 @@ textarea:focus-visible {
   height: 44px;
   flex: 0 0 44px;
   place-items: center;
-  border: 1px solid #3a4f78;
+  border: 1px solid #0c43cc;
   border-radius: 50%;
   color: #ffffff;
-  background: #16306a;
+  background: var(--shell-blue);
   font-size: 13px;
   font-weight: 720;
 }
@@ -471,13 +472,13 @@ textarea:focus-visible {
 }
 
 .product-profile-copy strong {
-  color: #f3f6fc;
+  color: var(--shell-text);
   font-size: 18px;
   font-weight: 680;
 }
 
 .product-profile-copy small {
-  color: #8797b5;
+  color: var(--shell-muted);
   font-size: 16px;
   font-weight: 560;
 }
@@ -492,7 +493,7 @@ textarea:focus-visible {
   scrollbar-width: none;
   border: 2px solid #8f9aad;
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--shell-workspace);
   box-shadow:
     0 18px 42px -22px rgb(5 18 48 / 55%),
     0 6px 16px -10px rgb(5 18 48 / 36%),
@@ -522,7 +523,7 @@ textarea:focus-visible {
   gap: 24px;
   padding: 22px 36px;
   border-bottom: 1px solid var(--shell-border-soft);
-  background: #ffffff;
+  background: var(--shell-workspace);
 }
 
 .sidebar-collapsed .shell-page-header {
