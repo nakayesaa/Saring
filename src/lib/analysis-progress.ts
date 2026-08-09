@@ -58,6 +58,7 @@ export type AnalysisProcessingViewModel = {
   runId: string;
   jobId: string;
   analysisCutoffAt: string;
+  requestedEngines: AnalysisEngine[];
   timeline: TimedAnalysisProgressEvent[];
 };
 
@@ -168,6 +169,7 @@ export function buildGoldenAnalysisProgress(input: {
     runId,
     jobId,
     analysisCutoffAt: input.analysisCutoffAt,
+    requestedEngines: [...primaryAnalysisEngines.map(({ key }) => key), ...supportingAnalysisEngines.map(({ key }) => key)],
     timeline,
   };
 }

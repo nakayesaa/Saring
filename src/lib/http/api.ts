@@ -12,6 +12,7 @@ import {
 import { PriceAnalysisNotFoundError } from "@/lib/price-engine/service";
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export class RequestPayloadTooLargeError extends Error {
   constructor() {
@@ -22,6 +23,10 @@ export class RequestPayloadTooLargeError extends Error {
 
 export function validResourceId(value: string) {
   return ID_PATTERN.test(value);
+}
+
+export function validDatabaseId(value: string) {
+  return UUID_PATTERN.test(value);
 }
 
 export async function requireApiSession() {

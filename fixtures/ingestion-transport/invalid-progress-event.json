@@ -1,0 +1,16 @@
+{
+  "schema_version": "saring-ingestion-progress-event-1.0.0",
+  "event_id": "event-ingestion-0005",
+  "sequence": 5,
+  "job_id": "job-ingestion-001",
+  "run_id": "run-ingestion-001",
+  "worker_id": "saring-python-local-01",
+  "lease_token": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
+  "event_type": "PROGRESS",
+  "stage": "COMPLETE",
+  "completed_units": 45,
+  "total_units": 45,
+  "unit_label": "documents",
+  "message": "Complete must be committed through the result callback.",
+  "occurred_at": "2025-09-19T11:09:00Z"
+}

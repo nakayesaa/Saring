@@ -50,7 +50,7 @@ export type AnalysisAbstentionView = {
 
 export type AnalysisFindingsViewModel = {
   projection_version: "saring-analysis-findings-ui-1.0.0";
-  source_contract_versions: readonly ("saring-engine-result-1.0.0" | "saring-evidence-brief-1.0.0")[];
+  source_contract_versions: readonly ("saring-engine-result-1.0.0" | "saring-engine-result-2.0.0" | "saring-evidence-brief-1.0.0")[];
   brief_id: string;
   brief_version: string;
   package_id: string;
@@ -171,7 +171,7 @@ export function projectAnalysisFindings(input: {
 
   return {
     projection_version: "saring-analysis-findings-ui-1.0.0",
-    source_contract_versions: ["saring-engine-result-1.0.0"],
+    source_contract_versions: ["saring-engine-result-2.0.0"],
     brief_id: `BRIEF:${input.runId}`,
     brief_version: "1.0.0",
     package_id: input.packageId,

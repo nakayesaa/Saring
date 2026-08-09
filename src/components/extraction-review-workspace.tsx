@@ -17,7 +17,6 @@ import type {
   ExtractionCategoryKey,
   ExtractionReviewViewModel,
 } from "@/lib/extraction-review";
-import { requestedAnalysisEngines } from "@/lib/analysis/contracts";
 
 const categoryIcons = {
   overview: ClipboardList,
@@ -68,7 +67,7 @@ export function ExtractionReviewPanel({ review }: { review: ExtractionReviewView
       const response = await fetch(`/api/packages/${encodeURIComponent(review.packageId)}/analysis`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ requested_engines: requestedAnalysisEngines }),
+        body: "{}",
       });
       if (!response.ok) throw new Error("Analysis could not be started.");
       router.push(`/packages/${review.packageId}/processing`);

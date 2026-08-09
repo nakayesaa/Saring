@@ -1,0 +1,39 @@
+{
+  "schema_version": "saring-ingestion-result-callback-1.0.0",
+  "callback_id": "result-ingestion-001",
+  "job_id": "job-ingestion-001",
+  "run_id": "run-ingestion-001",
+  "worker_id": "saring-python-local-01",
+  "lease_token": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
+  "status": "NEEDS_REVIEW",
+  "artifacts": [
+    {
+      "artifact_id": "artifact-parser-001",
+      "kind": "PARSER_RESULT",
+      "object_key": "organizations/org-saring-primary/packages/SYN-LAPTOP-HYBRID-001/ingestion/job-ingestion-001/parser-result.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "size_bytes": 18542,
+      "schema_version": "saring-parser-result-1.0.0",
+      "media_type": "application/json"
+    },
+    {
+      "artifact_id": "artifact-snapshot-001",
+      "kind": "CANONICAL_SNAPSHOT",
+      "object_key": "organizations/org-saring-primary/packages/SYN-LAPTOP-HYBRID-001/ingestion/job-ingestion-001/canonical-snapshot.json",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "size_bytes": 1483036,
+      "schema_version": "saring-canonical-analysis-snapshot-1.0.0",
+      "media_type": "application/json"
+    }
+  ],
+  "summary": {
+    "parser_status": "NEEDS_REVIEW",
+    "document_count": 45,
+    "parsed_document_count": 44,
+    "needs_review_document_count": 1,
+    "issue_count": 1,
+    "snapshot_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "error": null,
+  "completed_at": "2025-09-19T11:14:00Z"
+}

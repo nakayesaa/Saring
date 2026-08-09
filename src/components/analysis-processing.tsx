@@ -188,7 +188,7 @@ export function AnalysisProcessing({
         if (cancelled) return;
         dispatch({ type: "SYNC", events: data.events });
         setSyncError(null);
-        if (!["COMPLETED", "FAILED", "ABSTAINED", "CANCELLED"].includes(data.job.status)) {
+        if (!["COMPLETED", "NEEDS_REVIEW", "FAILED", "ABSTAINED", "CANCELLED"].includes(data.job.status)) {
           timer = window.setTimeout(sync, 1_000);
         }
       } catch (error) {
@@ -206,34 +206,43 @@ export function AnalysisProcessing({
     };
   }, [analysis.timeline, liveEndpoint]);
 
+  const activePrimaryEngines = useMemo(
+    () => primaryAnalysisEngines.filter(({ key }) => analysis.requestedEngines.includes(key)),
+    [analysis.requestedEngines],
+  );
+  const activeSupportingEngines = useMemo(
+    () => supportingAnalysisEngines.filter(({ key }) => analysis.requestedEngines.includes(key)),
+    [analysis.requestedEngines],
+  );
   const overallProgress = useMemo(() => {
-    const progress = primaryAnalysisEngines.map(({ key }) => engineProgress(state.engines[key]));
+    const progress = analysis.requestedEngines.map((engine) => engineProgress(state.engines[engine]));
+    if (!progress.length) return 0;
     return Math.round(progress.reduce((sum, value) => sum + value, 0) / progress.length);
-  }, [state.engines]);
+  }, [analysis.requestedEngines, state.engines]);
 
   const complete = state.runStatus === "COMPLETED";
   const findingCount = Object.values(state.engines).reduce(
     (total, engine) => total + (engine.findingCount ?? 0),
     0,
   );
-  const activeDefinition = primaryAnalysisEngines[activeEngineIndex] ?? primaryAnalysisEngines[0];
+  const activeDefinition = activePrimaryEngines[activeEngineIndex] ?? activePrimaryEngines[0] ?? primaryAnalysisEngines[0];
   const activeEngine = state.engines[activeDefinition.key];
   const activeProgress = engineProgress(activeEngine);
 
   useEffect(() => {
     if (complete || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const interval = window.setInterval(
-      () => setActiveEngineIndex((current) => (current + 1) % primaryAnalysisEngines.length),
+      () => setActiveEngineIndex((current) => (current + 1) % activePrimaryEngines.length),
       2800,
     );
     return () => window.clearInterval(interval);
-  }, [complete]);
+  }, [activePrimaryEngines.length, complete]);
 
   return (
     <>
       <PageHeading
         title={complete ? "Analysis complete" : "Analyzing package evidence"}
-        description={complete ? `${findingCount} source-linked findings are ready for human review.` : state.runStatus === "FAILED" ? "The run stopped safely. Its persisted events remain available for diagnosis and retry." : "Three intelligence engines are evaluating the same immutable canonical snapshot in parallel."}
+        description={complete ? `${findingCount} source-linked findings are ready for human review.` : state.runStatus === "FAILED" ? "The run stopped safely. Its persisted events remain available for diagnosis and retry." : `${analysis.requestedEngines.length} analysis engine${analysis.requestedEngines.length === 1 ? " is" : "s are"} evaluating the immutable canonical snapshot.`}
         actions={complete ? (
           <PrimaryActionLink href={`/packages/${analysis.packageId}/findings`} pendingLabel="Opening findings…">
             Tinjau temuan <ArrowRight size={17} aria-hidden="true" />
@@ -271,12 +280,12 @@ export function AnalysisProcessing({
 
         <section className="mt-6 overflow-hidden rounded-[22px] border-2 border-[#0b1b43] bg-[#0b1b43] p-4 shadow-[0_26px_58px_-34px_rgb(11_27_67_/_72%)] sm:p-5" aria-label="Primary intelligence engines">
           <div className="flex flex-col gap-3 px-1 pb-4 sm:flex-row sm:items-end sm:justify-between">
-            <div><h2 className="text-xl font-extrabold text-white">Analysis engines</h2><p className="mt-1 text-sm font-medium text-[#aebbd3]">Price, document, and relationship analysis run against the same package snapshot.</p></div>
+            <div><h2 className="text-xl font-extrabold text-white">Analysis engines</h2><p className="mt-1 text-sm font-medium text-[#aebbd3]">Only engines requested for this run are shown.</p></div>
             <p className="text-xs font-semibold text-[#aebbd3]">Select an engine to view progress</p>
           </div>
 
           <div className="grid gap-2.5 md:grid-cols-3" role="tablist" aria-label="Choose analysis engine">
-            {primaryAnalysisEngines.map((definition, index) => {
+            {activePrimaryEngines.map((definition, index) => {
               const engine = state.engines[definition.key];
               const progress = engineProgress(engine);
               const active = index === activeEngineIndex;
@@ -335,11 +344,11 @@ export function AnalysisProcessing({
           </article>
         </section>
 
-        <section className="mt-5 rounded-lg border border-[#d7d9dd] bg-white px-4 py-3.5">
+        {activeSupportingEngines.length ? <section className="mt-5 rounded-lg border border-[#d7d9dd] bg-white px-4 py-3.5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div><h2 className="text-sm font-extrabold text-[#17191d]">Supporting checks</h2><p className="mt-0.5 text-xs font-medium text-[#647493]">Deterministic safeguards running in parallel.</p></div>
             <div className="flex flex-wrap gap-2">
-              {supportingAnalysisEngines.map(({ key, title }) => {
+              {activeSupportingEngines.map(({ key, title }) => {
                 const engine = state.engines[key];
                 return (
                   <div key={key} className="flex min-w-[158px] items-center gap-2 rounded-md bg-[#f7f7f6] px-3 py-2">
@@ -352,7 +361,7 @@ export function AnalysisProcessing({
               })}
             </div>
           </div>
-        </section>
+        </section> : null}
 
       </div>
     </>

@@ -4,6 +4,11 @@ import type {
 } from "@/lib/analysis-progress";
 import type { EngineResult } from "@/lib/price-engine/contracts";
 
+export const ANALYSIS_JOB_CONTRACT = "saring-analysis-job-2.0.0";
+export const ENGINE_RESULT_CONTRACT = "saring-engine-result-2.0.0";
+export const ANALYSIS_PIPELINE_VERSION = "saring-analysis-pipeline-2.1.0";
+export const CANONICAL_ANALYSIS_INPUT_CONTRACT = "saring-canonical-analysis-snapshot-1.0.0";
+
 export const requestedAnalysisEngines = [
   "PRICE",
   "DOCUMENT",
@@ -13,20 +18,23 @@ export const requestedAnalysisEngines = [
   "DATA_QUALITY",
 ] as const satisfies readonly AnalysisEngine[];
 
+export const workerAnalysisEngines = ["DOCUMENT"] as const satisfies readonly AnalysisEngine[];
+
 export type AnalysisJobContract = {
-  schema_version: "saring-analysis-job-1.0.0";
+  schema_version: typeof ANALYSIS_JOB_CONTRACT;
   job_id: string;
   run_id: string;
   organization_id: string;
   package_id: string;
   job_kind: "ANALYSIS";
   status: "QUEUED" | "CLAIMED" | "RUNNING" | "COMPLETED" | "NEEDS_REVIEW" | "ABSTAINED" | "FAILED" | "CANCELLED";
-  stage: "QUEUED" | "VALIDATING_SNAPSHOT" | "PREPARING_ENGINES" | "RUNNING_ENGINES" | "FUSING_EVIDENCE" | "VALIDATING_RESULTS" | "COMPLETE";
+  stage: "QUEUED" | "VALIDATING_SNAPSHOT" | "PREPARING_ENGINES" | "RUNNING_ENGINES" | "FUSING_EVIDENCE" | "VALIDATING_RESULTS" | "UPLOADING_RESULTS" | "COMPLETE";
   requested_engines: AnalysisEngine[];
   canonical_snapshot_hash: string;
   canonical_snapshot_location: string;
-  input_contract_version: "saring-canonical-package-1.0.0";
-  output_contract_version: "saring-engine-result-1.0.0";
+  input_contract_version: typeof CANONICAL_ANALYSIS_INPUT_CONTRACT;
+  output_contract_version: typeof ENGINE_RESULT_CONTRACT;
+  pipeline_version: typeof ANALYSIS_PIPELINE_VERSION;
   idempotency_key: string;
   attempt: number;
   max_attempts: number;
@@ -43,7 +51,8 @@ export type AnalysisJobContract = {
   completed_at: string | null;
 };
 
-export type GeneralEngineResult = Omit<EngineResult, "engine"> & {
+export type GeneralEngineResult = Omit<EngineResult, "schema_version" | "engine"> & {
+  schema_version: typeof ENGINE_RESULT_CONTRACT;
   engine: AnalysisEngine;
 };
 

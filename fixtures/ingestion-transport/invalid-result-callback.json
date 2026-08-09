@@ -1,0 +1,17 @@
+{
+  "schema_version": "saring-ingestion-result-callback-1.0.0",
+  "callback_id": "result-ingestion-001",
+  "job_id": "job-ingestion-001",
+  "run_id": "run-ingestion-001",
+  "worker_id": "saring-python-local-01",
+  "lease_token": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
+  "status": "COMPLETED",
+  "artifacts": [],
+  "summary": null,
+  "error": {
+    "code": "PARSER_FAILED",
+    "message": "A completed callback cannot contain a failure.",
+    "retryable": false
+  },
+  "completed_at": "2025-09-19T11:14:00Z"
+}

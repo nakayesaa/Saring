@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/canonical-analysis-snapshot.schema.json",
+  "title": "SARING Canonical Analysis Snapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "snapshot_id", "package_id", "analysis_cutoff_at",
+    "bundle_hash", "parser_version", "configuration_profile", "package",
+    "participants", "items", "bids", "price_comparators",
+    "historical_participation", "documents", "exclusions", "quality", "provenance"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-canonical-analysis-snapshot-1.0.0" },
+    "snapshot_id": { "$ref": "#/$defs/id" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "analysis_cutoff_at": { "$ref": "#/$defs/timestamp" },
+    "bundle_hash": { "$ref": "#/$defs/sha256" },
+    "parser_version": { "type": "string", "minLength": 1 },
+    "configuration_profile": { "type": "string", "minLength": 1 },
+    "package": { "$ref": "#/$defs/package" },
+    "participants": { "type": "array", "items": { "$ref": "#/$defs/participant" } },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "bids": { "type": "array", "items": { "$ref": "#/$defs/bid" } },
+    "price_comparators": { "type": "array", "items": { "$ref": "#/$defs/comparator" } },
+    "historical_participation": { "type": "array", "items": { "$ref": "#/$defs/history" } },
+    "documents": { "type": "array", "items": { "$ref": "#/$defs/document" } },
+    "exclusions": { "type": "array", "items": { "$ref": "#/$defs/exclusion" } },
+    "quality": { "$ref": "#/$defs/quality" },
+    "provenance": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/provenance" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "bbox": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "prefixItems": [
+        { "type": "number" }, { "type": "number" },
+        { "type": "number" }, { "type": "number" }
+      ],
+      "items": false
+    },
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "buyer_name", "procurement_method", "bid_deadline_at", "currency", "bundle_mode"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "buyer_name": { "type": "string", "minLength": 1 },
+        "procurement_method": { "type": "string", "minLength": 1 },
+        "bid_deadline_at": { "$ref": "#/$defs/timestamp" },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "bundle_mode": { "enum": ["LIVE_AUTHORIZED", "RETROSPECTIVE", "SYNTHETIC"] }
+      }
+    },
+    "participant": {
+      "type": "object", "additionalProperties": false,
+      "required": ["vendor_id", "legal_name", "submitted_at"],
+      "properties": {
+        "vendor_id": { "$ref": "#/$defs/id" },
+        "legal_name": { "type": "string", "minLength": 1 },
+        "submitted_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["item_id", "category", "description", "quantity", "unit", "hps_unit_price", "hps_total", "tax_included"],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/id" },
+        "category": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "quantity": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "type": "string", "minLength": 1 },
+        "hps_unit_price": { "type": "number", "minimum": 0 },
+        "hps_total": { "type": "number", "minimum": 0 },
+        "tax_included": { "type": "boolean" }
+      }
+    },
+    "bid": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bid_id", "vendor_id", "item_id", "category", "product_model", "quantity", "unit", "unit_price", "tax_included", "warranty_months"],
+      "properties": {
+        "bid_id": { "$ref": "#/$defs/id" },
+        "vendor_id": { "$ref": "#/$defs/id" },
+        "item_id": { "$ref": "#/$defs/id" },
+        "category": { "type": "string", "minLength": 1 },
+        "product_model": { "type": "string", "minLength": 1 },
+        "quantity": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "type": "string", "minLength": 1 },
+        "unit_price": { "type": "number", "minimum": 0 },
+        "tax_included": { "type": "boolean" },
+        "warranty_months": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "comparator": {
+      "type": "object", "additionalProperties": false,
+      "required": ["comparator_id", "category", "observed_at", "region", "unit_price", "tax_included", "shipping_included", "warranty_months"],
+      "properties": {
+        "comparator_id": { "$ref": "#/$defs/id" },
+        "category": { "type": "string", "minLength": 1 },
+        "observed_at": { "$ref": "#/$defs/timestamp" },
+        "region": { "type": "string", "minLength": 1 },
+        "unit_price": { "type": "number", "minimum": 0 },
+        "tax_included": { "type": "boolean" },
+        "shipping_included": { "type": "boolean" },
+        "warranty_months": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "history": {
+      "type": "object", "additionalProperties": false,
+      "required": ["event_id", "historical_package_id", "vendor_id", "buyer_id", "participated_at"],
+      "properties": {
+        "event_id": { "$ref": "#/$defs/id" },
+        "historical_package_id": { "$ref": "#/$defs/id" },
+        "vendor_id": { "$ref": "#/$defs/id" },
+        "buyer_id": { "$ref": "#/$defs/id" },
+        "participated_at": { "type": "string", "format": "date" }
+      }
+    },
+    "word": {
+      "type": "object", "additionalProperties": false,
+      "required": ["word_id", "text", "normalized", "bbox", "confidence"],
+      "properties": {
+        "word_id": { "$ref": "#/$defs/id" },
+        "text": { "type": "string", "minLength": 1 },
+        "normalized": { "type": "string" },
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "page": {
+      "type": "object", "additionalProperties": false,
+      "required": ["page_number", "width", "height", "rotation", "extraction_method", "status", "quality", "text", "words"],
+      "properties": {
+        "page_number": { "type": "integer", "minimum": 1 },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "rotation": { "type": "integer" },
+        "extraction_method": { "enum": ["NATIVE", "OCR", "NONE"] },
+        "status": { "enum": ["PARSED", "LOW_CONFIDENCE", "UNREADABLE"] },
+        "quality": { "type": "number", "minimum": 0, "maximum": 1 },
+        "text": { "type": "string" },
+        "words": { "type": "array", "items": { "$ref": "#/$defs/word" } }
+      }
+    },
+    "passage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passage_id", "page_number", "text", "normalized_tokens", "word_ids", "bbox", "section_tag"],
+      "properties": {
+        "passage_id": { "$ref": "#/$defs/id" },
+        "page_number": { "type": "integer", "minimum": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "normalized_tokens": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "word_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "section_tag": { "enum": ["PAGE_BODY", "HEADER", "FOOTER", "TABLE", "UNKNOWN"] }
+      }
+    },
+    "document": {
+      "type": "object", "additionalProperties": false,
+      "required": ["document_id", "vendor_id", "document_type", "file_name", "sha256", "mime_type", "size_bytes", "effective_at", "status", "metadata", "pages", "passages"],
+      "properties": {
+        "document_id": { "$ref": "#/$defs/id" },
+        "vendor_id": { "$ref": "#/$defs/id" },
+        "document_type": { "enum": ["ADMINISTRATIVE_BID", "TECHNICAL_BID", "COMMERCIAL_BID"] },
+        "file_name": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mime_type": { "const": "application/pdf" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "effective_at": { "$ref": "#/$defs/timestamp" },
+        "status": { "enum": ["PARSED", "NEEDS_REVIEW", "UNREADABLE"] },
+        "metadata": {
+          "type": "object", "additionalProperties": false,
+          "required": ["author", "creator", "producer"],
+          "properties": {
+            "author": { "type": ["string", "null"] },
+            "creator": { "type": ["string", "null"] },
+            "producer": { "type": ["string", "null"] }
+          }
+        },
+        "pages": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/page" } },
+        "passages": { "type": "array", "items": { "$ref": "#/$defs/passage" } }
+      }
+    },
+    "exclusion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["file_id", "source_hash", "reason"],
+      "properties": {
+        "file_id": { "$ref": "#/$defs/id" },
+        "source_hash": { "$ref": "#/$defs/sha256" },
+        "reason": { "enum": ["ROLE_NOT_RUNTIME", "NOT_ANALYSIS_ELIGIBLE", "AFTER_CUTOFF", "UNSUPPORTED_FOR_SLICE"] }
+      }
+    },
+    "quality": {
+      "type": "object", "additionalProperties": false,
+      "required": ["document_completeness", "parsed_documents", "needs_review_documents", "unreadable_documents", "native_pages", "ocr_pages", "low_confidence_pages", "unreadable_pages"],
+      "properties": {
+        "document_completeness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "parsed_documents": { "type": "integer", "minimum": 0 },
+        "needs_review_documents": { "type": "integer", "minimum": 0 },
+        "unreadable_documents": { "type": "integer", "minimum": 0 },
+        "native_pages": { "type": "integer", "minimum": 0 },
+        "ocr_pages": { "type": "integer", "minimum": 0 },
+        "low_confidence_pages": { "type": "integer", "minimum": 0 },
+        "unreadable_pages": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["file_id", "source_hash", "document_id", "role"],
+      "properties": {
+        "file_id": { "$ref": "#/$defs/id" },
+        "source_hash": { "$ref": "#/$defs/sha256" },
+        "document_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "role": { "const": "RUNTIME_EVIDENCE" }
+      }
+    }
+  }
+}

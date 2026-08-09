@@ -1,0 +1,29 @@
+{
+  "schema_version": "saring-analysis-job-claim-response-2.0.0",
+  "job": {
+    "job_id": "job-1",
+    "run_id": "run-1",
+    "organization_id": "org-1",
+    "package_id": "package-1",
+    "attempt": 0,
+    "max_attempts": 3,
+    "next_progress_sequence": 0,
+    "requested_engines": [],
+    "analysis_cutoff_at": "not-a-date",
+    "input_contract_version": "saring-canonical-package-1.0.0",
+    "output_contract_version": "saring-engine-result-1.0.0",
+    "pipeline_version": "pipeline",
+    "claimed_at": "2026-08-09T12:00:00.000Z",
+    "lease_expires_at": "2026-08-09T12:10:00.000Z"
+  },
+  "lease_token": "short",
+  "snapshot": {
+    "download_url": "not-a-url",
+    "expires_at": "2026-08-09T12:15:00.000Z",
+    "sha256": "bad",
+    "size_bytes": 0,
+    "schema_version": "saring-canonical-package-1.0.0",
+    "media_type": "application/zip"
+  },
+  "expected_artifacts": []
+}

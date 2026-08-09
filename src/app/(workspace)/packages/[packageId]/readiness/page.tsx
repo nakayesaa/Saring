@@ -7,12 +7,19 @@ import { PageHeading } from "@/components/page-heading";
 import { ReadinessEngineList } from "@/components/readiness-engine-list";
 import { buildGoldenExtractionReview } from "@/lib/extraction-review";
 import { buildCanonicalExtractionReview } from "@/lib/extraction-review";
+import { buildAnalysisSnapshotExtractionReview } from "@/lib/extraction-review";
 import { getGoldenCase } from "@/lib/golden-case";
 import { buildCanonicalReadiness, buildGoldenReadiness } from "@/lib/readiness";
+import { buildAnalysisSnapshotReadiness } from "@/lib/readiness";
 import { requireWorkspaceSession } from "@/lib/auth/session";
 import { resolveWorkspacePrincipal } from "@/lib/auth/principal";
 import { getPersistedCanonicalPackage } from "@/lib/intake/service";
 import { DomainError } from "@/lib/errors";
+import {
+  CANONICAL_ANALYSIS_SNAPSHOT_CONTRACT,
+  type CanonicalAnalysisSnapshot,
+} from "@/lib/intake/contracts";
+import type { CanonicalSnapshot } from "@/lib/intake/validation";
 
 export const metadata: Metadata = { title: "Analysis readiness" };
 
@@ -23,8 +30,15 @@ export default async function ReadinessPage({ params }: { params: Promise<{ pack
   let review;
   try {
     const persisted = await getPersistedCanonicalPackage(principal, packageId);
-    readiness = buildCanonicalReadiness(persisted.snapshot);
-    review = buildCanonicalExtractionReview(persisted.snapshot);
+    if (persisted.contractVersion === CANONICAL_ANALYSIS_SNAPSHOT_CONTRACT) {
+      const snapshot = persisted.snapshot as CanonicalAnalysisSnapshot;
+      readiness = buildAnalysisSnapshotReadiness(snapshot);
+      review = buildAnalysisSnapshotExtractionReview(snapshot);
+    } else {
+      const snapshot = persisted.snapshot as CanonicalSnapshot;
+      readiness = buildCanonicalReadiness(snapshot);
+      review = buildCanonicalExtractionReview(snapshot);
+    }
   } catch (error) {
     const item = getGoldenCase(packageId);
     if (!(error instanceof DomainError && error.code === "PACKAGE_NOT_FOUND") || !item) notFound();

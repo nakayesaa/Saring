@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/package-bundle-manifest.schema.json",
+  "title": "SARING Package Bundle Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundle_id",
+    "tender_source_id",
+    "created_at",
+    "analysis_cutoff_at",
+    "provided_by_role",
+    "legal_basis_tag",
+    "participant_count",
+    "bundle_mode",
+    "confidentiality_class",
+    "expected_files"
+  ],
+  "properties": {
+    "bundle_id": { "$ref": "#/$defs/id" },
+    "tender_source_id": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "anchor_reference_id": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "analysis_cutoff_at": { "$ref": "#/$defs/timestamp" },
+    "provided_by_role": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "legal_basis_tag": {
+      "enum": [
+        "PUBLIC_INFORMATION",
+        "AUTHORIZED_PROCUREMENT",
+        "CONSENT",
+        "DSA",
+        "SYNTHETIC",
+        "SYNTHETIC_WITH_PUBLIC_ANCHOR"
+      ]
+    },
+    "participant_count": { "type": "integer", "minimum": 0 },
+    "bundle_mode": { "enum": ["LIVE_AUTHORIZED", "RETROSPECTIVE", "SYNTHETIC"] },
+    "confidentiality_class": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "version", "seed"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "seed": { "type": "integer" }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "expected_files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": { "$ref": "#/$defs/file" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relative_path", "size_bytes", "sha256"],
+      "properties": {
+        "relative_path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "size_bytes": { "type": "integer", "minimum": 0, "maximum": 262144000 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "schema_version": "saring-analysis-worker-progress-event-1.0.0",
+  "event_id": "analysis-event-001",
+  "accepted": true,
+  "lease_expires_at": "2026-08-09T12:11:00.000Z"
+}

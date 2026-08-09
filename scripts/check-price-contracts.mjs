@@ -4,6 +4,8 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
 const contractFiles = [
+  "contracts/v1/package-bundle-manifest.schema.json",
+  "contracts/v1/ingestion-job.schema.json",
   "contracts/v1/evidence-locator.schema.json",
   "contracts/v1/engine-result.schema.json",
   "contracts/v1/canonical-package.schema.json",
@@ -53,7 +55,49 @@ const invalid = await json("fixtures/price-engine/invalid-input.json");
 const validateCanonical = ajv.getSchema("https://saring.local/contracts/v1/canonical-package.schema.json");
 const validateInput = ajv.getSchema("https://saring.local/contracts/v1/price-engine-input.schema.json");
 const validateOutput = ajv.getSchema("https://saring.local/contracts/v1/price-engine-output.schema.json");
-if (!validateCanonical || !validateInput || !validateOutput) throw new Error("Required schemas were not registered.");
+const validateBundleManifest = ajv.getSchema("https://saring.local/contracts/v1/package-bundle-manifest.schema.json");
+const validateIngestionJob = ajv.getSchema("https://saring.local/contracts/v1/ingestion-job.schema.json");
+if (!validateCanonical || !validateInput || !validateOutput || !validateBundleManifest || !validateIngestionJob) {
+  throw new Error("Required schemas were not registered.");
+}
+
+const exampleHash = "a".repeat(64);
+assertValid(validateBundleManifest, {
+  bundle_id: "BUNDLE-001",
+  tender_source_id: "PACKAGE-001",
+  created_at: "2026-08-09T12:00:00+07:00",
+  analysis_cutoff_at: "2026-08-08T18:00:00+07:00",
+  provided_by_role: "Authorized reviewer",
+  legal_basis_tag: "AUTHORIZED_PROCUREMENT",
+  participant_count: 1,
+  bundle_mode: "LIVE_AUTHORIZED",
+  confidentiality_class: "RESTRICTED",
+  expected_files: [{ relative_path: "package_PACKAGE-001/package.json", size_bytes: 42, sha256: exampleHash }],
+}, "package bundle manifest");
+assertValid(validateIngestionJob, {
+  schema_version: "saring-ingestion-job-1.0.0",
+  job_id: "JOB-001",
+  run_id: "RUN-001",
+  organization_id: "ORG-001",
+  package_id: "PACKAGE-001",
+  job_kind: "INGESTION",
+  status: "QUEUED",
+  stage: "QUEUED",
+  input_bundle_hash: exampleHash,
+  input_bundle_location: "supabase://evidence/org/quarantine/bundle.zip",
+  input_contract_version: "saring-package-bundle-manifest-1.0.0",
+  output_contract_version: "saring-canonical-package-1.0.0",
+  requested_parser_version: "saring-parser-1.0.0",
+  idempotency_key: "idempotency-key-001",
+  attempt: 0,
+  max_attempts: 3,
+  lease: null,
+  error: null,
+  created_at: "2026-08-09T12:00:00+07:00",
+  available_at: "2026-08-09T12:00:00+07:00",
+  started_at: null,
+  completed_at: null,
+}, "ingestion job");
 
 assertValid(validateCanonical, canonical, "golden canonical package");
 assertValid(validateInput, input, "golden Price Engine input");
@@ -66,4 +110,4 @@ if (canonicalHash !== input.canonical_input_hash) {
   throw new Error("golden input does not reference the golden canonical package hash");
 }
 
-console.log(`Validated ${schemas.length} schemas and 5 Price Engine fixtures.`);
+console.log(`Validated ${schemas.length} schemas, 2 ingestion contracts, and 5 Price Engine fixtures.`);

@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "contracts:check": "node scripts/check-price-contracts.mjs",
+    "contracts:check": "node scripts/check-price-contracts.mjs && node scripts/check-ingestion-transport-contracts.mjs && node scripts/check-analysis-transport-contracts.mjs",
     "check": "npm run contracts:check && npm run db:validate && npm run db:generate && npm run lint && npm run typecheck",
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",

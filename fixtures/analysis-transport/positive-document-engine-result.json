@@ -1,0 +1,68 @@
+{
+  "schema_version": "saring-engine-result-2.0.0",
+  "result_id": "ER:DOCUMENT:golden-001",
+  "run_id": "AR:11111111-2222-4333-8444-555555555555",
+  "package_id": "SYN-LAPTOP-HYBRID-001",
+  "analysis_cutoff_at": "2025-09-19T11:00:00.000Z",
+  "engine": "DOCUMENT",
+  "engine_version": "document-engine-golden-1.0.0",
+  "model_version": "document-similarity-golden-1.0.0",
+  "status": "SCORED",
+  "score": 0.81,
+  "confidence": 0.92,
+  "summary": "Two non-template similarities are supported by page-level evidence and require human review.",
+  "findings": [
+    {
+      "finding_id": "FINDING:DOCUMENT:001",
+      "finding_type": "NON_TEMPLATE_PASSAGE_SIMILARITY",
+      "scope": "CROSS_VENDOR",
+      "subject_ids": ["VENDOR:ALPHA", "VENDOR:BETA"],
+      "score": 0.84,
+      "confidence": 0.93,
+      "summary": "Two vendor submissions share a distinctive non-template passage.",
+      "evidence_locator_ids": ["LOC:DOCUMENT:001", "LOC:DOCUMENT:002"],
+      "alternative_explanations": ["Both vendors may have used the same external proposal consultant."],
+      "metrics": { "similarity": 0.96, "template_excluded": true }
+    },
+    {
+      "finding_id": "FINDING:DOCUMENT:002",
+      "finding_type": "SHARED_RARE_ERROR",
+      "scope": "CROSS_VENDOR",
+      "subject_ids": ["VENDOR:ALPHA", "VENDOR:BETA"],
+      "score": 0.76,
+      "confidence": 0.89,
+      "summary": "The same rare typographical error appears in both submissions.",
+      "evidence_locator_ids": ["LOC:DOCUMENT:001", "LOC:DOCUMENT:002"],
+      "alternative_explanations": ["The text may originate from a shared manufacturer specification."],
+      "metrics": { "rare_error_frequency": 2, "corpus_document_count": 98 }
+    }
+  ],
+  "evidence_locators": [
+    {
+      "schema_version": "saring-evidence-locator-1.0.0",
+      "locator_id": "LOC:DOCUMENT:001",
+      "package_id": "SYN-LAPTOP-HYBRID-001",
+      "source_type": "DOCUMENT_PAGE",
+      "source_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "document_id": "DOC:ALPHA:TECHNICAL",
+      "page_number": 7,
+      "label": "Alpha technical submission, page 7"
+    },
+    {
+      "schema_version": "saring-evidence-locator-1.0.0",
+      "locator_id": "LOC:DOCUMENT:002",
+      "package_id": "SYN-LAPTOP-HYBRID-001",
+      "source_type": "DOCUMENT_PAGE",
+      "source_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "document_id": "DOC:BETA:TECHNICAL",
+      "page_number": 6,
+      "label": "Beta technical submission, page 6"
+    }
+  ],
+  "alternative_explanations": [
+    "The vendors may rely on the same consultant or manufacturer source material."
+  ],
+  "abstention_reason": null,
+  "input_snapshot_hash": "c8eace75fc162f64d73c79b7f5e57d0a6c76ef238a757e3b919106da4339bfc0",
+  "created_at": "2026-08-09T12:02:30.000Z"
+}

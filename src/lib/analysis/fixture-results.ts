@@ -35,7 +35,7 @@ function resultForFindings(
   const createdAt = new Date(Date.parse(job.created_at) + 10_000).toISOString();
 
   return parseEngineResult({
-    schema_version: "saring-engine-result-1.0.0",
+    schema_version: "saring-engine-result-2.0.0",
     result_id: `RESULT:${job.run_id}:${engine}`,
     run_id: job.run_id,
     package_id: job.package_id,

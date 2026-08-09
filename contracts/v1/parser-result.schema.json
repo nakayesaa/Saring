@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/parser-result.schema.json",
+  "title": "SARING Parser Result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "package_id", "bundle_id", "status", "parser_version",
+    "document_outcomes", "issues", "snapshot_hash", "snapshot_file"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-parser-result-1.0.0" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "bundle_id": { "$ref": "#/$defs/id" },
+    "status": { "enum": ["PARSED", "NEEDS_REVIEW", "FAILED"] },
+    "parser_version": { "type": "string", "minLength": 1 },
+    "document_outcomes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_id", "status", "page_count", "native_pages", "ocr_pages",
+          "low_confidence_pages", "unreadable_pages"
+        ],
+        "properties": {
+          "document_id": { "$ref": "#/$defs/id" },
+          "status": { "enum": ["PARSED", "NEEDS_REVIEW", "UNREADABLE", "REJECTED"] },
+          "page_count": { "type": "integer", "minimum": 1 },
+          "native_pages": { "type": "integer", "minimum": 0 },
+          "ocr_pages": { "type": "integer", "minimum": 0 },
+          "low_confidence_pages": { "type": "integer", "minimum": 0 },
+          "unreadable_pages": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "subject_id", "message"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+          "severity": { "enum": ["INFO", "WARNING", "ERROR"] },
+          "subject_id": { "type": ["string", "null"] },
+          "message": { "type": "string", "minLength": 1, "maxLength": 500 }
+        }
+      }
+    },
+    "snapshot_hash": { "$ref": "#/$defs/sha256" },
+    "snapshot_file": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

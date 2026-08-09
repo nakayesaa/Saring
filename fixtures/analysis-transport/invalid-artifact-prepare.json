@@ -1,0 +1,18 @@
+{
+  "schema_version": "saring-analysis-artifact-prepare-1.0.0",
+  "request_id": "request-1",
+  "job_id": "job-1",
+  "run_id": "run-1",
+  "worker_id": "worker-1",
+  "lease_token": "short",
+  "artifacts": [
+    {
+      "kind": "ENGINE_RESULT",
+      "engine": "DOCUMENT",
+      "sha256": "bad",
+      "size_bytes": 0,
+      "schema_version": "saring-engine-result-1.0.0",
+      "media_type": "text/plain"
+    }
+  ]
+}

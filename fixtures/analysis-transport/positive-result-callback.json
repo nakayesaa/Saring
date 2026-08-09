@@ -1,0 +1,31 @@
+{
+  "schema_version": "saring-analysis-result-callback-1.0.0",
+  "callback_id": "analysis-result-callback-001",
+  "job_id": "333cc7a6-4c38-48c7-807e-ef017db38f04",
+  "run_id": "AR:11111111-2222-4333-8444-555555555555",
+  "worker_id": "saring-python-local-01",
+  "lease_token": "analysis_lease_token_1234567890abcdef",
+  "status": "COMPLETED",
+  "artifacts": [
+    {
+      "artifact_id": "77777777-8888-4999-aaaa-bbbbbbbbbbbb",
+      "kind": "ENGINE_RESULT",
+      "engine": "DOCUMENT",
+      "object_key": "org/derived/package/analysis/job/attempt-1/document-result.json",
+      "sha256": "91db718f8a843243799bf898bc47648bb533ad855df4d908e5aa3f5270b38cf8",
+      "size_bytes": 2822,
+      "schema_version": "saring-engine-result-2.0.0",
+      "media_type": "application/json"
+    }
+  ],
+  "summary": {
+    "engine_count": 1,
+    "scored_count": 1,
+    "low_confidence_count": 0,
+    "abstained_count": 0,
+    "not_applicable_count": 0,
+    "finding_count": 2
+  },
+  "error": null,
+  "completed_at": "2026-08-09T12:03:00.000Z"
+}

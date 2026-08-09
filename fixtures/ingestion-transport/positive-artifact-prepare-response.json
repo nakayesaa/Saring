@@ -1,0 +1,39 @@
+{
+  "schema_version": "saring-ingestion-artifact-prepare-1.0.0",
+  "request_id": "prepare-ingestion-001",
+  "job_id": "job-ingestion-001",
+  "run_id": "run-ingestion-001",
+  "lease_expires_at": "2025-09-19T11:20:00Z",
+  "artifacts": [
+    {
+      "artifact_id": "artifact-parser-001",
+      "kind": "PARSER_RESULT",
+      "object_key": "organizations/org-saring-primary/packages/SYN-LAPTOP-HYBRID-001/ingestion/job-ingestion-001/parser-result.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "size_bytes": 18542,
+      "schema_version": "saring-parser-result-1.0.0",
+      "media_type": "application/json",
+      "upload": {
+        "url": "https://storage.example.test/signed/parser-result.json?token=fixture",
+        "method": "PUT",
+        "headers": { "content-type": "application/json" },
+        "expires_at": "2025-09-19T11:25:00Z"
+      }
+    },
+    {
+      "artifact_id": "artifact-snapshot-001",
+      "kind": "CANONICAL_SNAPSHOT",
+      "object_key": "organizations/org-saring-primary/packages/SYN-LAPTOP-HYBRID-001/ingestion/job-ingestion-001/canonical-snapshot.json",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "size_bytes": 1483036,
+      "schema_version": "saring-canonical-analysis-snapshot-1.0.0",
+      "media_type": "application/json",
+      "upload": {
+        "url": "https://storage.example.test/signed/canonical-snapshot.json?token=fixture",
+        "method": "PUT",
+        "headers": { "content-type": "application/json" },
+        "expires_at": "2025-09-19T11:25:00Z"
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v2/engine-result.schema.json",
+  "title": "SARING Engine Result v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "result_id", "run_id", "package_id", "analysis_cutoff_at",
+    "engine", "engine_version", "model_version", "status", "score", "confidence",
+    "summary", "findings", "evidence_locators", "alternative_explanations",
+    "abstention_reason", "input_snapshot_hash", "created_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-engine-result-2.0.0" },
+    "result_id": { "$ref": "#/$defs/id" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "analysis_cutoff_at": { "$ref": "#/$defs/timestamp" },
+    "engine": { "$ref": "#/$defs/engine" },
+    "engine_version": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "model_version": { "type": ["string", "null"], "maxLength": 200 },
+    "status": { "enum": ["SCORED", "LOW_CONFIDENCE", "ABSTAINED", "NOT_APPLICABLE"] },
+    "score": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "findings": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/finding" } },
+    "evidence_locators": {
+      "type": "array",
+      "maxItems": 20000,
+      "items": { "$ref": "https://saring.local/contracts/v1/evidence-locator.schema.json" }
+    },
+    "alternative_explanations": {
+      "type": "array", "maxItems": 100,
+      "items": { "type": "string", "minLength": 1, "maxLength": 1000 }, "uniqueItems": true
+    },
+    "abstention_reason": { "type": ["string", "null"], "maxLength": 2000 },
+    "input_snapshot_hash": { "$ref": "#/$defs/sha256" },
+    "created_at": { "$ref": "#/$defs/timestamp" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["SCORED", "LOW_CONFIDENCE"] } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "abstention_reason": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["ABSTAINED", "NOT_APPLICABLE"] } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "score": { "type": "null" },
+          "findings": { "type": "array", "maxItems": 0 },
+          "evidence_locators": { "type": "array", "maxItems": 0 },
+          "abstention_reason": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "engine": { "enum": ["PRICE", "DOCUMENT", "GRAPH", "TECHNICAL", "COMPLETENESS", "DATA_QUALITY", "FUSION"] },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id", "finding_type", "scope", "subject_ids", "score", "confidence",
+        "summary", "evidence_locator_ids", "alternative_explanations", "metrics"
+      ],
+      "properties": {
+        "finding_id": { "$ref": "#/$defs/id" },
+        "finding_type": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "scope": { "enum": ["PACKAGE", "VENDOR", "CROSS_VENDOR", "ITEM"] },
+        "subject_ids": { "type": "array", "minItems": 1, "maxItems": 100, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "score": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "evidence_locator_ids": { "type": "array", "minItems": 1, "maxItems": 1000, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "alternative_explanations": { "type": "array", "maxItems": 100, "items": { "type": "string", "minLength": 1, "maxLength": 1000 }, "uniqueItems": true },
+        "metrics": { "type": "object", "maxProperties": 100, "additionalProperties": { "type": ["string", "number", "boolean", "null"] } }
+      }
+    }
+  }
+}

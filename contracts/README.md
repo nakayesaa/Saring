@@ -4,7 +4,7 @@ These schemas are the machine-readable integration boundary between Next.js,
 PostgreSQL, fixtures, and the Python analysis worker. Markdown explains the
 contracts; the `*.schema.json` files define them.
 
-## Frozen v1 contracts
+## Frozen contracts
 
 | Contract | Schema version | Purpose |
 |---|---|---|
@@ -14,6 +14,14 @@ contracts; the `*.schema.json` files define them.
 | Evidence Brief | `saring-evidence-brief-1.0.0` | Versioned reviewer-facing evidence package |
 | Analysis job | `saring-analysis-job-1.0.0` | Idempotent work request claimed by the Python worker |
 | Progress event | `saring-analysis-progress-event-1.0.0` | Ordered engine/run updates that drive the Processing UI |
+| Package bundle manifest | `saring-package-bundle-manifest-1.0.0` | Immutable raw hybrid upload inventory and cutoff identity |
+| Ingestion job | `saring-ingestion-job-1.0.0` | Idempotent parser/OCR work request claimed by the Python worker |
+| Parser result | `saring-parser-result-1.0.0` | Per-document parser/OCR outcomes and semantic snapshot identity |
+| Canonical analysis snapshot | `saring-canonical-analysis-snapshot-1.0.0` | Validated parser output consumed by analytical engines and readiness UI |
+| Ingestion claim response | `saring-ingestion-job-claim-response-1.0.0` | Leased job, signed bundle download, and expected artifacts |
+| Ingestion progress event | `saring-ingestion-progress-event-1.0.0` | Idempotent heartbeat/progress mutation that renews the active lease |
+| Ingestion artifact prepare | `saring-ingestion-artifact-prepare-1.0.0` | Request and server-issued signed upload targets for parser artifacts |
+| Ingestion result callback | `saring-ingestion-result-callback-1.0.0` | Terminal artifact references, parser summary, or sanitized failure |
 | Price observation | `saring-price-observation-1.0.0` | Versioned historical price/comparator record |
 | Price training manifest | `saring-price-training-manifest-1.0.0` | Immutable dataset identity, cutoff, hash, and split policy |
 | Price model artifact | `saring-price-model-artifact-1.0.0` | Runtime-compatible model bundle manifest |
@@ -21,6 +29,12 @@ contracts; the `*.schema.json` files define them.
 | Price Engine detail | `saring-price-engine-detail-1.0.0` | Auditable result for one participant-item quote |
 | Price Engine output | `saring-price-engine-output-1.0.0` | Batch output returned by the Python boundary |
 | Price Evidence response | `saring-price-evidence-response-1.0.0` | Shared result plus Price details consumed by web/PDF |
+| Analysis job v2 | `saring-analysis-job-2.0.0` | Immutable canonical-snapshot analysis request and worker lifecycle |
+| Engine result v2 | `saring-engine-result-2.0.0` | Production output from one requested analysis engine |
+| Analysis claim response v2 | `saring-analysis-job-claim-response-2.0.0` | Lease, semantic snapshot identity, signed raw artifact, and expected results |
+| Analysis worker progress | `saring-analysis-worker-progress-event-1.0.0` | Lease-renewing worker heartbeat and progress events |
+| Analysis artifact prepare | `saring-analysis-artifact-prepare-1.0.0` | Server-issued upload targets for engine result artifacts |
+| Analysis result callback | `saring-analysis-result-callback-1.0.0` | Verified terminal artifact references, summary, or sanitized failure |
 
 All schemas use JSON Schema Draft 2020-12 and reject undeclared properties.
 Production IDs should be UUIDs. Stable namespaced fixture IDs are also accepted
@@ -55,4 +69,6 @@ should generate or maintain matching runtime validators from these schemas;
 TypeScript types alone are not sufficient validation.
 
 Run `npm run contracts:check` to compile the schema graph and validate the
-positive, abstention, and deliberately invalid Price Engine fixtures.
+positive and deliberately invalid Price Engine, ingestion, and analysis
+transport fixtures. The analysis fixture set also includes a complete,
+hash-addressable Document Engine v2 output.

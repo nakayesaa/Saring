@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { z } from "zod";
-import { requestedAnalysisEngines } from "@/lib/analysis/contracts";
+import { requestedAnalysisEngines, workerAnalysisEngines } from "@/lib/analysis/contracts";
 import {
   createAnalysisJob,
   dispatchAnalysisJob,
@@ -13,6 +13,8 @@ import {
   requireTenantApiSession,
   validResourceId,
 } from "@/lib/http/api";
+import { getAnalysisEngineConfig } from "@/lib/env";
+import { DomainError } from "@/lib/errors";
 
 const engineSchema = z.enum(requestedAnalysisEngines);
 const requestSchema = z.strictObject({
@@ -54,12 +56,25 @@ export async function POST(
   }
   try {
     const body = requestSchema.parse(await readJsonBody(request, 4096));
+    const driver = getAnalysisEngineConfig().driver;
+    const engines = body.requested_engines ??
+      (driver === "worker" ? workerAnalysisEngines : requestedAnalysisEngines);
+    if (
+      driver === "worker" &&
+      engines.some((engine) => !workerAnalysisEngines.includes(engine as typeof workerAnalysisEngines[number]))
+    ) {
+      throw new DomainError(
+        "ENGINE_NOT_AVAILABLE",
+        "Only the Document Engine is available through the production worker.",
+        422,
+      );
+    }
     const submission = await createAnalysisJob(
       auth.principal,
       packageId,
-      body.requested_engines ?? requestedAnalysisEngines,
+      engines,
     );
-    if (submission.created) {
+    if (submission.created && driver === "fixture") {
       const actor = {
         authUserId: auth.principal.authUserId,
         organizationId: auth.principal.organizationId,

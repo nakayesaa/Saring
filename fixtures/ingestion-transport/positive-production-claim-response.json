@@ -1,0 +1,41 @@
+{
+  "schema_version": "saring-ingestion-job-claim-response-1.0.0",
+  "job": {
+    "job_id": "job-ingestion-production-001",
+    "run_id": "run-ingestion-production-001",
+    "organization_id": "org-saring-primary",
+    "package_id": "PKG-PRODUCTION-001",
+    "attempt": 1,
+    "max_attempts": 3,
+    "requested_parser_version": "document-parser-v1",
+    "input_contract_version": "saring-runtime-bundle-manifest-1.0.0",
+    "claimed_at": "2026-08-09T04:01:00Z",
+    "lease_expires_at": "2026-08-09T04:11:00Z"
+  },
+  "lease_token": "productionLeaseToken_abcdefghijklmnopqrstuvwxyz0123456789",
+  "bundle": {
+    "download_url": "https://storage.example.test/signed/production-bundle.zip?token=fixture",
+    "expires_at": "2026-08-09T04:16:00Z",
+    "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "size_bytes": 2483036,
+    "mime_type": "application/zip",
+    "original_file_name": "authorized-package-bundle.zip"
+  },
+  "expected_artifacts": [
+    {
+      "kind": "PARSER_RESULT",
+      "schema_version": "saring-parser-result-1.0.0",
+      "media_type": "application/json"
+    },
+    {
+      "kind": "CANONICAL_SNAPSHOT",
+      "schema_version": "saring-canonical-analysis-snapshot-1.0.0",
+      "media_type": "application/json"
+    }
+  ],
+  "isolation": {
+    "evaluator_only_path_patterns": [],
+    "non_runtime_path_patterns": [],
+    "rule": "Honor manifest roles and analysis eligibility before parsing or feature generation."
+  }
+}

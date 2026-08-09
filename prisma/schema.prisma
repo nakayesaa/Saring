@@ -126,6 +126,40 @@ enum UploadIntentStatus {
   EXPIRED
 }
 
+enum IngestionJobStatus {
+  QUEUED
+  CLAIMED
+  RUNNING
+  COMPLETED
+  NEEDS_REVIEW
+  FAILED
+  CANCELLED
+}
+
+enum IngestionJobStage {
+  QUEUED
+  VALIDATING_BUNDLE
+  PARSING
+  OCR
+  EXTRACTING
+  PARSING_STRUCTURED
+  PARSING_DOCUMENTS
+  CANONICALIZING
+  UPLOADING_ARTIFACTS
+  COMPLETE
+}
+
+enum IngestionArtifactKind {
+  PARSER_RESULT
+  CANONICAL_SNAPSHOT
+}
+
+enum IngestionArtifactStatus {
+  PREPARED
+  VERIFIED
+  REJECTED
+}
+
 enum AnalysisJobStatus {
   QUEUED
   CLAIMED
@@ -144,7 +178,14 @@ enum AnalysisJobStage {
   RUNNING_ENGINES
   FUSING_EVIDENCE
   VALIDATING_RESULTS
+  UPLOADING_RESULTS
   COMPLETE
+}
+
+enum AnalysisArtifactStatus {
+  PREPARED
+  VERIFIED
+  REJECTED
 }
 
 enum AnalysisEngine {
@@ -189,6 +230,7 @@ model Organization {
   sources            SourceRecord[]
   auditEvents        AuditEvent[]
   uploadIntents      UploadIntent[]
+  ingestionJobs      IngestionJob[]
   analysisJobs       AnalysisJob[]
   canonicalSnapshots CanonicalSnapshot[]
 }
@@ -202,13 +244,14 @@ model UserProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  memberships           OrganizationMembership[]
-  caseAccess            CaseAccess[]
-  briefs                EvidenceBrief[]
-  reviews               ReviewDisposition[]
-  auditEvents           AuditEvent[]
-  uploadIntents         UploadIntent[]
-  requestedAnalysisJobs AnalysisJob[]
+  memberships            OrganizationMembership[]
+  caseAccess             CaseAccess[]
+  briefs                 EvidenceBrief[]
+  reviews                ReviewDisposition[]
+  auditEvents            AuditEvent[]
+  uploadIntents          UploadIntent[]
+  requestedIngestionJobs IngestionJob[]
+  requestedAnalysisJobs  AnalysisJob[]
 }
 
 model OrganizationMembership {
@@ -255,6 +298,7 @@ model TenderPackage {
   graphEdges         GraphEdge[]
   auditEvents        AuditEvent[]
   uploadIntents      UploadIntent[]
+  ingestionJobs      IngestionJob[]
   analysisJobs       AnalysisJob[]
   engineResults      EngineResult[]
   canonicalSnapshots CanonicalSnapshot[]
@@ -347,6 +391,7 @@ model Document {
   package           TenderPackage      @relation(fields: [packageId], references: [id], onDelete: Cascade)
   vendor            Vendor?            @relation(fields: [vendorId], references: [id], onDelete: Restrict)
   passages          DocumentPassage[]
+  ingestionJobs     IngestionJob[]
   analysisJobs      AnalysisJob[]
   uploadIntent      UploadIntent?
   canonicalSnapshot CanonicalSnapshot?
@@ -472,6 +517,91 @@ model CanonicalSnapshot {
   @@index([organizationId, createdAt])
 }
 
+model IngestionJob {
+  id                     String             @id @default(uuid()) @db.Uuid
+  organizationId         String             @db.Uuid
+  packageId              String             @db.Uuid
+  sourceDocumentId       String             @db.Uuid
+  requestedById          String             @db.Uuid
+  runId                  String             @unique
+  status                 IngestionJobStatus @default(QUEUED)
+  stage                  IngestionJobStage  @default(QUEUED)
+  inputBundleHash        String
+  inputBundleLocation    String
+  inputContractVersion   String
+  outputContractVersion  String
+  requestedParserVersion String
+  idempotencyKey         String
+  attempt                Int                @default(0)
+  maxAttempts            Int                @default(3)
+  lease                  Json?
+  leaseTokenHash         String?
+  lastProgressSequence   Int                @default(-1)
+  resultCallbackId       String?
+  error                  Json?
+  availableAt            DateTime           @default(now())
+  startedAt              DateTime?
+  completedAt            DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  package        TenderPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  sourceDocument Document      @relation(fields: [sourceDocumentId], references: [id], onDelete: Restrict)
+  requestedBy    UserProfile   @relation(fields: [requestedById], references: [id], onDelete: Restrict)
+  progressEvents IngestionProgressEvent[]
+  artifacts      IngestionArtifact[]
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, status, availableAt])
+  @@index([packageId, createdAt])
+}
+
+model IngestionProgressEvent {
+  id              String            @id @default(uuid()) @db.Uuid
+  jobId           String            @db.Uuid
+  externalEventId String
+  sequence        Int
+  eventType       String
+  stage           IngestionJobStage
+  completedUnits  Int?
+  totalUnits      Int?
+  unitLabel       String?
+  message         String?
+  payloadHash     String
+  payload         Json
+  occurredAt      DateTime
+  createdAt       DateTime          @default(now())
+
+  job IngestionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, externalEventId])
+  @@index([jobId, sequence])
+  @@index([jobId, occurredAt])
+}
+
+model IngestionArtifact {
+  id               String                  @id @default(uuid()) @db.Uuid
+  jobId            String                  @db.Uuid
+  attempt          Int
+  kind             IngestionArtifactKind
+  objectKey        String                  @unique
+  sha256           String
+  byteSize         BigInt
+  schemaVersion    String
+  mimeType         String
+  prepareRequestId String
+  status           IngestionArtifactStatus @default(PREPARED)
+  verifiedAt       DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  job IngestionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, attempt, kind])
+  @@index([jobId, status])
+}
+
 model AnalysisJob {
   id                        String            @id @default(uuid()) @db.Uuid
   organizationId            String            @db.Uuid
@@ -485,6 +615,7 @@ model AnalysisJob {
   stage                     AnalysisJobStage  @default(QUEUED)
   requestedEngines          AnalysisEngine[]
   canonicalSnapshotHash     String
+  canonicalSnapshotArtifactHash String?
   canonicalSnapshotLocation String
   inputContractVersion      String
   outputContractVersion     String
@@ -493,6 +624,9 @@ model AnalysisJob {
   attempt                   Int               @default(0)
   maxAttempts               Int               @default(3)
   lease                     Json?
+  leaseTokenHash            String?
+  lastProgressSequence      Int               @default(0)
+  resultCallbackId          String?
   error                     Json?
   availableAt               DateTime          @default(now())
   startedAt                 DateTime?
@@ -508,11 +642,34 @@ model AnalysisJob {
   retry             AnalysisJob?            @relation("AnalysisJobRetries")
   requestedBy       UserProfile             @relation(fields: [requestedById], references: [id], onDelete: Restrict)
   progressEvents    AnalysisProgressEvent[]
+  artifacts         AnalysisArtifact[]
   results           EngineResult[]
 
   @@unique([organizationId, idempotencyKey])
   @@index([organizationId, status, availableAt])
   @@index([packageId, createdAt])
+}
+
+model AnalysisArtifact {
+  id               String                 @id @default(uuid()) @db.Uuid
+  jobId            String                 @db.Uuid
+  attempt          Int
+  engine           AnalysisEngine
+  objectKey        String                 @unique
+  sha256           String
+  byteSize         BigInt
+  schemaVersion    String
+  mimeType         String
+  prepareRequestId String
+  status           AnalysisArtifactStatus @default(PREPARED)
+  verifiedAt       DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  job AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, attempt, engine])
+  @@index([jobId, status])
 }
 
 model AnalysisProgressEvent {

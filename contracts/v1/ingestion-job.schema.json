@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/ingestion-job.schema.json",
+  "title": "SARING Ingestion Job v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "run_id",
+    "organization_id",
+    "package_id",
+    "job_kind",
+    "status",
+    "stage",
+    "input_bundle_hash",
+    "input_bundle_location",
+    "input_contract_version",
+    "output_contract_version",
+    "requested_parser_version",
+    "idempotency_key",
+    "attempt",
+    "max_attempts",
+    "lease",
+    "error",
+    "created_at",
+    "available_at",
+    "started_at",
+    "completed_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-ingestion-job-1.0.0" },
+    "job_id": { "$ref": "#/$defs/id" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "organization_id": { "$ref": "#/$defs/id" },
+    "package_id": { "$ref": "#/$defs/id" },
+    "job_kind": { "const": "INGESTION" },
+    "status": { "enum": ["QUEUED", "CLAIMED", "RUNNING", "COMPLETED", "NEEDS_REVIEW", "FAILED", "CANCELLED"] },
+    "stage": { "enum": ["QUEUED", "VALIDATING_BUNDLE", "PARSING", "OCR", "EXTRACTING", "CANONICALIZING", "COMPLETE"] },
+    "input_bundle_hash": { "$ref": "#/$defs/sha256" },
+    "input_bundle_location": { "type": "string", "minLength": 1 },
+    "input_contract_version": {
+      "enum": [
+        "saring-package-bundle-manifest-1.0.0",
+        "saring-runtime-bundle-manifest-1.0.0"
+      ]
+    },
+    "output_contract_version": { "const": "saring-canonical-package-1.0.0" },
+    "requested_parser_version": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 200 },
+    "attempt": { "type": "integer", "minimum": 0 },
+    "max_attempts": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "lease": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["worker_id", "claimed_at", "heartbeat_at", "expires_at"],
+          "properties": {
+            "worker_id": { "$ref": "#/$defs/id" },
+            "claimed_at": { "$ref": "#/$defs/timestamp" },
+            "heartbeat_at": { "$ref": "#/$defs/timestamp" },
+            "expires_at": { "$ref": "#/$defs/timestamp" }
+          }
+        }
+      ]
+    },
+    "error": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message", "retryable"],
+          "properties": {
+            "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+            "message": { "type": "string", "minLength": 1, "maxLength": 2000 },
+            "retryable": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "available_at": { "$ref": "#/$defs/timestamp" },
+    "started_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+    "completed_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

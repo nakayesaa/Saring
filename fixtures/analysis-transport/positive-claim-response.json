@@ -1,0 +1,37 @@
+{
+  "schema_version": "saring-analysis-job-claim-response-2.0.0",
+  "job": {
+    "job_id": "333cc7a6-4c38-48c7-807e-ef017db38f04",
+    "run_id": "AR:11111111-2222-4333-8444-555555555555",
+    "organization_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+    "package_id": "SYN-LAPTOP-HYBRID-001",
+    "attempt": 1,
+    "max_attempts": 3,
+    "next_progress_sequence": 1,
+    "requested_engines": ["DOCUMENT"],
+    "analysis_cutoff_at": "2025-09-19T11:00:00.000Z",
+    "canonical_snapshot_hash": "c8eace75fc162f64d73c79b7f5e57d0a6c76ef238a757e3b919106da4339bfc0",
+    "input_contract_version": "saring-canonical-analysis-snapshot-1.0.0",
+    "output_contract_version": "saring-engine-result-2.0.0",
+    "pipeline_version": "saring-analysis-pipeline-2.1.0",
+    "claimed_at": "2026-08-09T12:00:00.000Z",
+    "lease_expires_at": "2026-08-09T12:10:00.000Z"
+  },
+  "lease_token": "analysis_lease_token_1234567890abcdef",
+  "snapshot": {
+    "download_url": "https://example.supabase.co/storage/v1/object/sign/evidence/snapshot.json?token=opaque",
+    "expires_at": "2026-08-09T12:15:00.000Z",
+    "sha256": "3a2a54e0a58a503c620199fef1c53058be1f23c8346ead1cf7407f75f672eb26",
+    "size_bytes": 1430514,
+    "schema_version": "saring-canonical-analysis-snapshot-1.0.0",
+    "media_type": "application/json"
+  },
+  "expected_artifacts": [
+    {
+      "kind": "ENGINE_RESULT",
+      "engine": "DOCUMENT",
+      "schema_version": "saring-engine-result-2.0.0",
+      "media_type": "application/json"
+    }
+  ]
+}

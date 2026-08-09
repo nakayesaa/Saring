@@ -1,5 +1,6 @@
 import { formatIdr, type GoldenCase } from "@/lib/golden-case";
 import type { CanonicalSnapshot } from "@/lib/intake/validation";
+import type { CanonicalAnalysisSnapshot } from "@/lib/intake/contracts";
 
 export type ReadinessCheck = {
   label: string;
@@ -44,6 +45,34 @@ export function buildCanonicalReadiness(snapshot: CanonicalSnapshot) {
       { label: "Participants", value: `${snapshot.package.participant_count} vendors` },
       { label: "HPS", value: snapshot.package.hps_total === null ? "Not supplied" : formatIdr(snapshot.package.hps_total) },
       { label: "Analysis cutoff", value: snapshot.package.analysis_cutoff_at },
+    ],
+    checks,
+  };
+}
+
+export function buildAnalysisSnapshotReadiness(snapshot: CanonicalAnalysisSnapshot) {
+  const documentCoverage = Math.round(snapshot.quality.document_completeness * 100);
+  const priceCoverage = snapshot.items.length && snapshot.bids.length
+    ? snapshot.price_comparators.length ? 100 : 70
+    : 0;
+  const graphCoverage = snapshot.participants.length
+    ? snapshot.historical_participation.length ? 100 : 65
+    : 0;
+  const hasDocumentWarning = snapshot.quality.needs_review_documents > 0 ||
+    snapshot.quality.unreadable_documents > 0 || snapshot.quality.low_confidence_pages > 0;
+  const hpsTotal = snapshot.items.reduce((total, item) => total + item.hps_total, 0);
+  const checks: readonly ReadinessCheck[] = [
+    { label: "Canonical contract", value: 100, detail: "Snapshot identity, cutoff, hashes, and provenance passed validation.", status: "Ready", explanation: "The Python parser output satisfies the frozen canonical analysis snapshot contract.", consequence: "Analysis receives one immutable, content-addressed snapshot." },
+    { label: "Price intelligence", value: priceCoverage, detail: `${snapshot.items.length} items, ${snapshot.bids.length} bids, and ${snapshot.price_comparators.length} comparators.`, status: priceCoverage >= 80 ? "Ready" : "Partial context", explanation: "Coverage reflects the available item, bid, and comparator records.", consequence: "Items without a defensible cohort must abstain." },
+    { label: "Document intelligence", value: documentCoverage, detail: `${snapshot.documents.length} bidder documents; ${snapshot.quality.ocr_pages} OCR pages.`, status: hasDocumentWarning ? "Ready with warning" : "Ready", explanation: hasDocumentWarning ? "Low-confidence or unreadable material remains explicitly visible." : "All registered documents were parsed without review warnings.", consequence: "Uncertain pages remain excluded until reviewed." },
+    { label: "Relationship intelligence", value: graphCoverage, detail: `${snapshot.participants.length} participants and ${snapshot.historical_participation.length} dated historical records.`, status: graphCoverage >= 80 ? "Ready" : "Partial context", explanation: "Graph coverage depends on resolved participants and pre-cutoff history.", consequence: "Missing historical context cannot create positive relationship evidence." },
+  ];
+  return {
+    summary: [
+      { label: "Package", value: snapshot.package_id },
+      { label: "Participants", value: `${snapshot.participants.length} vendors` },
+      { label: "HPS", value: formatIdr(hpsTotal) },
+      { label: "Analysis cutoff", value: snapshot.analysis_cutoff_at },
     ],
     checks,
   };

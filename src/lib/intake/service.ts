@@ -1,6 +1,6 @@
 import "server-only";
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import type { WorkspacePrincipal } from "@/lib/auth/principal";
 import { recordAuditEvent } from "@/lib/audit";
@@ -8,6 +8,12 @@ import { withTenantContext } from "@/lib/db/tenant";
 import { DomainError } from "@/lib/errors";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { assertBundleIsSafe } from "@/lib/intake/malware-scanner";
+import {
+  CANONICAL_PACKAGE_CONTRACT,
+  DEFAULT_PARSER_VERSION,
+  PACKAGE_BUNDLE_CONTRACT,
+} from "@/lib/intake/contracts";
+import { validateHybridBundle, type ValidatedHybridBundle } from "@/lib/intake/hybrid-validation";
 import {
   acceptedBundleMetadata,
   validateCanonicalBundle,
@@ -113,6 +119,168 @@ async function rejectIntent(principal: WorkspacePrincipal, uploadId: string, obj
   ]);
 }
 
+function ingestionIdempotencyKey(organizationId: string, bundleHash: string) {
+  return createHash("sha256")
+    .update(`${organizationId}:${bundleHash}:${DEFAULT_PARSER_VERSION}`)
+    .digest("hex");
+}
+
+function rawBundlePolicy(bundle: ValidatedHybridBundle) {
+  const synthetic = bundle.manifest.bundle_mode === "SYNTHETIC";
+  return {
+    classification: synthetic ? "SYNTHETIC" as const : "RESTRICTED" as const,
+    legalBasis: synthetic ? "SYNTHETIC" as const :
+      bundle.manifest.legal_basis_tag === "PUBLIC_INFORMATION" ? "PUBLIC_INFORMATION" as const :
+        "AUTHORIZED_PROCUREMENT" as const,
+    retentionClass: synthetic ? "TEMPORARY_ENRICHMENT" as const : "PROCUREMENT_CASE" as const,
+  };
+}
+
+async function finalizeHybridUpload(
+  principal: WorkspacePrincipal,
+  uploadId: string,
+  objectKey: string,
+  originalFileName: string,
+  bundle: ValidatedHybridBundle,
+) {
+  const policy = rawBundlePolicy(bundle);
+  const documentId = randomUUID();
+  const ingestionJobId = randomUUID();
+  const runId = `IR:${randomUUID()}`;
+  const idempotencyKey = ingestionIdempotencyKey(principal.organizationId, bundle.fileHash);
+  const bidDeadline = new Date(bundle.package.bid_deadline_at);
+
+  return withTenantContext(principal, async (transaction) => {
+    const duplicate = await transaction.tenderPackage.findUnique({
+      where: {
+        organizationId_sourceId: {
+          organizationId: principal.organizationId,
+          sourceId: bundle.manifest.tender_source_id,
+        },
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      throw new DomainError(
+        "PACKAGE_ALREADY_EXISTS",
+        "A package with this source ID already exists in the workspace.",
+        409,
+      );
+    }
+
+    const procurementPackage = await transaction.tenderPackage.create({
+      data: {
+        organizationId: principal.organizationId,
+        sourceId: bundle.manifest.tender_source_id,
+        name: bundle.package.name,
+        fiscalYear: bidDeadline.getUTCFullYear(),
+        procurementMethod: bundle.package.procurement_method,
+        buyerInstitution: bundle.package.buyer,
+        currency: bundle.package.currency,
+        bidDeadlineAt: bidDeadline,
+        analysisCutoffAt: new Date(bundle.package.analysis_cutoff_at),
+        workflowStage: "INGESTING",
+        isSynthetic: bundle.manifest.bundle_mode === "SYNTHETIC",
+      },
+    });
+    const document = await transaction.document.create({
+      data: {
+        id: documentId,
+        organizationId: principal.organizationId,
+        packageId: procurementPackage.id,
+        type: "MANIFEST",
+        originalFileName,
+        storageKey: objectKey,
+        sha256: bundle.fileHash,
+        mimeType: bundle.mimeType,
+        byteSize: BigInt(bundle.byteSize),
+        classification: policy.classification,
+        legalBasis: policy.legalBasis,
+        retentionClass: policy.retentionClass,
+        ingestStatus: "VALIDATED",
+        metadata: {
+          bundleId: bundle.manifest.bundle_id,
+          bundleMode: bundle.manifest.bundle_mode,
+          manifestCreatedAt: bundle.manifest.created_at,
+          participantCount: bundle.manifest.participant_count,
+          expectedFileCount: bundle.manifest.expected_files.length,
+          archivePrefix: bundle.archivePrefix,
+          evaluatorAssetsPresent: bundle.evaluatorAssetsPresent,
+          inputContractVersion: PACKAGE_BUNDLE_CONTRACT,
+        },
+      },
+    });
+    const ingestionJob = await transaction.ingestionJob.create({
+      data: {
+        id: ingestionJobId,
+        organizationId: principal.organizationId,
+        packageId: procurementPackage.id,
+        sourceDocumentId: document.id,
+        requestedById: principal.profileId,
+        runId,
+        inputBundleHash: bundle.fileHash,
+        inputBundleLocation: `supabase://evidence/${objectKey}`,
+        inputContractVersion: PACKAGE_BUNDLE_CONTRACT,
+        outputContractVersion: CANONICAL_PACKAGE_CONTRACT,
+        requestedParserVersion: DEFAULT_PARSER_VERSION,
+        idempotencyKey,
+      },
+    });
+    await transaction.sourceRecord.create({
+      data: {
+        organizationId: principal.organizationId,
+        entityType: "TenderPackage",
+        entityId: procurementPackage.id,
+        sourceSystem: "SARING_HYBRID_BUNDLE",
+        sourceRecordId: bundle.manifest.bundle_id,
+        sourceUrlOrEndpoint: `supabase-storage:${BUCKET}/${objectKey}`,
+        retrievedAt: new Date(),
+        effectiveFrom: new Date(bundle.package.announcement_at),
+        rawPayloadHash: bundle.fileHash,
+        rawPayloadStorageKey: objectKey,
+        parserVersion: "UNPARSED",
+        fieldCompleteness: 0,
+        qualityFlags: [
+          "RAW_HYBRID_BUNDLE",
+          ...(bundle.evaluatorAssetsPresent ? ["EVALUATOR_ASSETS_REQUIRE_ISOLATION"] : []),
+        ],
+        legalBasis: policy.legalBasis,
+        licenseOrTermsId: "PACKAGE_BUNDLE_UPLOAD",
+        retentionClass: policy.retentionClass,
+      },
+    });
+    await transaction.uploadIntent.update({
+      where: { id: uploadId },
+      data: {
+        status: "FINALIZED",
+        packageId: procurementPackage.id,
+        documentId: document.id,
+        finalizedAt: new Date(),
+      },
+    });
+    await recordAuditEvent(transaction, {
+      organizationId: principal.organizationId,
+      actorUserId: principal.profileId,
+      packageId: procurementPackage.id,
+      action: "RAW_PACKAGE_BUNDLE_QUEUED",
+      targetType: "IngestionJob",
+      targetId: ingestionJob.id,
+      metadata: {
+        sha256: bundle.fileHash,
+        byteSize: bundle.byteSize,
+        bundleId: bundle.manifest.bundle_id,
+        evaluatorAssetsPresent: bundle.evaluatorAssetsPresent,
+      },
+    });
+    return {
+      packageId: procurementPackage.sourceId,
+      uploadId,
+      ingestionJobId: ingestionJob.id,
+      status: "QUEUED_FOR_INGESTION" as const,
+    };
+  });
+}
+
 export async function finalizeUploadIntent(
   principal: WorkspacePrincipal,
   uploadId: string,
@@ -145,6 +313,31 @@ export async function finalizeUploadIntent(
     if (bytes.byteLength !== Number(intent.declaredByteSize)) {
       throw new DomainError("UPLOAD_SIZE_MISMATCH", "Uploaded bytes do not match the declared file size.", 422);
     }
+    let hybridBundle: ValidatedHybridBundle | null = null;
+    if (intent.originalFileName.toLowerCase().endsWith(".zip")) {
+      try {
+        hybridBundle = await validateHybridBundle(bytes);
+      } catch (error) {
+        if (!(error instanceof DomainError && error.code === "NOT_HYBRID_BUNDLE")) throw error;
+      }
+    }
+    if (hybridBundle) {
+      await assertBundleIsSafe({
+        bytes,
+        fileName: intent.originalFileName,
+        mimeType: hybridBundle.mimeType,
+        sha256: hybridBundle.fileHash,
+        bundleMode: hybridBundle.manifest.bundle_mode,
+      });
+      return await finalizeHybridUpload(
+        principal,
+        uploadId,
+        intent.objectKey,
+        intent.originalFileName,
+        hybridBundle,
+      );
+    }
+
     const bundle = await validateCanonicalBundle(bytes, intent.originalFileName);
     const canonical = bundle.snapshot;
     await assertBundleIsSafe({
@@ -336,7 +529,8 @@ export async function getPersistedCanonicalPackage(
     }
     return {
       package: procurementPackage,
-      snapshot: snapshot.payload as unknown as import("@/lib/intake/validation").CanonicalSnapshot,
+      contractVersion: snapshot.contractVersion,
+      snapshot: snapshot.payload as unknown,
     };
   });
 }

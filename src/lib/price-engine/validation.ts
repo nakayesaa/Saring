@@ -3,9 +3,10 @@ import "server-only";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 import canonicalPackageSchema from "../../../contracts/v1/canonical-package.schema.json";
-import analysisJobSchema from "../../../contracts/v1/analysis-job.schema.json";
+import analysisJobSchema from "../../../contracts/v2/analysis-job.schema.json";
 import analysisProgressSchema from "../../../contracts/v1/analysis-progress-event.schema.json";
-import engineResultSchema from "../../../contracts/v1/engine-result.schema.json";
+import engineResultV1Schema from "../../../contracts/v1/engine-result.schema.json";
+import engineResultSchema from "../../../contracts/v2/engine-result.schema.json";
 import evidenceLocatorSchema from "../../../contracts/v1/evidence-locator.schema.json";
 import priceDetailSchema from "../../../contracts/v1/price-engine-detail.schema.json";
 import priceEvidenceSchema from "../../../contracts/v1/price-evidence-response.schema.json";
@@ -37,6 +38,7 @@ const ajv = addFormats(
 
 for (const schema of [
   evidenceLocatorSchema,
+  engineResultV1Schema,
   engineResultSchema,
   analysisJobSchema,
   analysisProgressSchema,

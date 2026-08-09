@@ -34,6 +34,12 @@ function isAcceptedFile(file: File) {
   );
 }
 
+function bundleContentType(fileName: string) {
+  return fileName.toLowerCase().endsWith(".zip")
+    ? "application/zip"
+    : "application/json";
+}
+
 export function CanonicalPackageImport({ bundles }: { bundles: readonly StoredPackageOption[] }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -74,13 +80,14 @@ export function CanonicalPackageImport({ bundles }: { bundles: readonly StoredPa
     setError(null);
     setUploadPhase("preparing");
     try {
+      const contentType = bundleContentType(file.name);
       const intentResponse = await fetch("/api/package-uploads", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           fileName: file.name,
           byteSize: file.size,
-          mimeType: file.type || "application/octet-stream",
+          mimeType: contentType,
         }),
       });
       if (!intentResponse.ok) {
@@ -94,13 +101,14 @@ export function CanonicalPackageImport({ bundles }: { bundles: readonly StoredPa
       };
 
       setUploadPhase("uploading");
+      const uploadBody = new Blob([file], { type: contentType });
       const { error: uploadError } = await createSupabaseBrowserClient()
         .storage.from(intent.bucket)
-        .uploadToSignedUrl(intent.objectKey, intent.token, file, {
-          contentType: file.type || undefined,
+        .uploadToSignedUrl(intent.objectKey, intent.token, uploadBody, {
+          contentType,
           upsert: false,
         });
-      if (uploadError) throw new Error("The bundle could not be uploaded to private storage.");
+      if (uploadError) throw new Error(uploadError.message);
 
       setUploadPhase("validating");
       const finalizeResponse = await fetch(
@@ -110,8 +118,12 @@ export function CanonicalPackageImport({ bundles }: { bundles: readonly StoredPa
       if (!finalizeResponse.ok) {
         throw new Error(await responseError(finalizeResponse, "The canonical bundle did not pass validation."));
       }
-      const result = await finalizeResponse.json() as { packageId: string };
-      router.push(`/packages/${encodeURIComponent(result.packageId)}/readiness`);
+      const result = await finalizeResponse.json() as {
+        packageId: string;
+        status: "FINALIZED" | "QUEUED_FOR_INGESTION";
+      };
+      const nextStep = result.status === "QUEUED_FOR_INGESTION" ? "ingestion" : "readiness";
+      router.push(`/packages/${encodeURIComponent(result.packageId)}/${nextStep}`);
     } catch (caught) {
       setUploadPhase("idle");
       setUploadedFile(null);
@@ -233,7 +245,7 @@ export function CanonicalPackageImport({ bundles }: { bundles: readonly StoredPa
           <p role="alert" className="mt-5 text-sm font-semibold text-[#b83a32]">{error}</p>
         ) : uploadPhase !== "idle" ? (
           <p className="mt-5 text-sm font-semibold text-[#1450e6]">
-            {uploadPhase === "preparing" ? "Preparing private upload…" : uploadPhase === "uploading" ? "Uploading immutable bundle…" : "Validating hash and canonical contract…"}
+            {uploadPhase === "preparing" ? "Preparing private upload…" : uploadPhase === "uploading" ? "Uploading immutable bundle…" : "Validating manifest, hashes, and package identity…"}
           </p>
         ) : uploadedFile ? (
           <p className="mt-5 text-sm font-medium text-[#647493]">

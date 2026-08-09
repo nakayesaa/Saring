@@ -1,0 +1,24 @@
+{
+  "schema_version": "saring-analysis-result-callback-1.0.0",
+  "callback_id": "callback-1",
+  "job_id": "job-1",
+  "run_id": "run-1",
+  "worker_id": "worker-1",
+  "lease_token": "short",
+  "status": "FAILED",
+  "artifacts": [
+    {
+      "artifact_id": "artifact-1",
+      "kind": "ENGINE_RESULT",
+      "engine": "DOCUMENT",
+      "object_key": "result.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "size_bytes": 10,
+      "schema_version": "saring-engine-result-2.0.0",
+      "media_type": "application/json"
+    }
+  ],
+  "summary": null,
+  "error": null,
+  "completed_at": "not-a-date"
+}

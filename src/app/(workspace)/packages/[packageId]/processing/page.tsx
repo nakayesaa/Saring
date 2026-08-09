@@ -24,6 +24,7 @@ export default async function ProcessingPage({ params }: { params: Promise<{ pac
       runId: state.job.run_id,
       jobId: state.job.job_id,
       analysisCutoffAt: state.analysisCutoffAt,
+      requestedEngines: state.job.requested_engines,
       timeline: state.events.map((event) => ({ delayMs: 0, event })),
     };
     liveEndpoint = `/api/packages/${encodeURIComponent(packageId)}/analysis`;

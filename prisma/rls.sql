@@ -54,7 +54,7 @@ DECLARE table_name text;
 BEGIN
   FOREACH table_name IN ARRAY ARRAY[
     'TenderPackage', 'Vendor', 'Document', 'SourceRecord',
-    'GraphNode', 'GraphEdge', 'AuditEvent', 'UploadIntent', 'AnalysisJob',
+    'GraphNode', 'GraphEdge', 'AuditEvent', 'UploadIntent', 'IngestionJob', 'AnalysisJob',
     'CanonicalSnapshot'
   ] LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
@@ -74,6 +74,36 @@ CREATE POLICY progress_event_tenant ON "AnalysisProgressEvent"
   USING (EXISTS (
     SELECT 1 FROM "AnalysisJob" job
     WHERE job.id = "AnalysisProgressEvent"."jobId"
+      AND job."organizationId" = app.current_org_id()
+  ));
+
+ALTER TABLE "AnalysisArtifact" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AnalysisArtifact" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS analysis_artifact_tenant ON "AnalysisArtifact";
+CREATE POLICY analysis_artifact_tenant ON "AnalysisArtifact"
+  USING (EXISTS (
+    SELECT 1 FROM "AnalysisJob" job
+    WHERE job.id = "AnalysisArtifact"."jobId"
+      AND job."organizationId" = app.current_org_id()
+  ));
+
+ALTER TABLE "IngestionProgressEvent" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "IngestionProgressEvent" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS ingestion_progress_tenant ON "IngestionProgressEvent";
+CREATE POLICY ingestion_progress_tenant ON "IngestionProgressEvent"
+  USING (EXISTS (
+    SELECT 1 FROM "IngestionJob" job
+    WHERE job.id = "IngestionProgressEvent"."jobId"
+      AND job."organizationId" = app.current_org_id()
+  ));
+
+ALTER TABLE "IngestionArtifact" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "IngestionArtifact" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS ingestion_artifact_tenant ON "IngestionArtifact";
+CREATE POLICY ingestion_artifact_tenant ON "IngestionArtifact"
+  USING (EXISTS (
+    SELECT 1 FROM "IngestionJob" job
+    WHERE job.id = "IngestionArtifact"."jobId"
       AND job."organizationId" = app.current_org_id()
   ));
 
@@ -131,5 +161,6 @@ REVOKE UPDATE, DELETE ON "AuditEvent" FROM PUBLIC;
 GRANT USAGE ON SCHEMA public TO authenticated, service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service_role;
 GRANT SELECT ON "AnalysisJob" TO service_role;
+GRANT SELECT, UPDATE ON "IngestionJob" TO service_role;
 GRANT SELECT, INSERT, UPDATE ON "Organization", "OrganizationMembership", "UserProfile" TO service_role;
 GRANT SELECT ON "OrganizationMembership", "UserProfile" TO authenticated;

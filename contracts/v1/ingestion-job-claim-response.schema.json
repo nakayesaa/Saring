@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/ingestion-job-claim-response.schema.json",
+  "title": "SARING Ingestion Job Claim Response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "job", "lease_token", "bundle",
+    "expected_artifacts", "isolation"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-ingestion-job-claim-response-1.0.0" },
+    "job": { "$ref": "#/$defs/job" },
+    "lease_token": { "$ref": "#/$defs/lease_token" },
+    "bundle": { "$ref": "#/$defs/bundle" },
+    "expected_artifacts": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/expected_artifact" },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": { "kind": { "const": "PARSER_RESULT" } }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": { "kind": { "const": "CANONICAL_SNAPSHOT" } }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    },
+    "isolation": { "$ref": "#/$defs/isolation" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "lease_token": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "job_id", "run_id", "organization_id", "package_id",
+        "attempt", "max_attempts", "requested_parser_version",
+        "input_contract_version", "claimed_at", "lease_expires_at"
+      ],
+      "properties": {
+        "job_id": { "$ref": "#/$defs/id" },
+        "run_id": { "$ref": "#/$defs/id" },
+        "organization_id": { "$ref": "#/$defs/id" },
+        "package_id": { "$ref": "#/$defs/id" },
+        "attempt": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "max_attempts": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "requested_parser_version": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "input_contract_version": {
+          "enum": [
+            "saring-package-bundle-manifest-1.0.0",
+            "saring-runtime-bundle-manifest-1.0.0"
+          ]
+        },
+        "claimed_at": { "$ref": "#/$defs/timestamp" },
+        "lease_expires_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "download_url", "expires_at", "sha256", "size_bytes",
+        "mime_type", "original_file_name"
+      ],
+      "properties": {
+        "download_url": { "type": "string", "format": "uri", "maxLength": 8192 },
+        "expires_at": { "$ref": "#/$defs/timestamp" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 1073741824 },
+        "mime_type": { "const": "application/zip" },
+        "original_file_name": { "type": "string", "minLength": 1, "maxLength": 255 }
+      }
+    },
+    "expected_artifact": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "schema_version", "media_type"],
+          "properties": {
+            "kind": { "const": "PARSER_RESULT" },
+            "schema_version": { "const": "saring-parser-result-1.0.0" },
+            "media_type": { "const": "application/json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "schema_version", "media_type"],
+          "properties": {
+            "kind": { "const": "CANONICAL_SNAPSHOT" },
+            "schema_version": { "const": "saring-canonical-analysis-snapshot-1.0.0" },
+            "media_type": { "const": "application/json" }
+          }
+        }
+      ]
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluator_only_path_patterns", "non_runtime_path_patterns", "rule"
+      ],
+      "properties": {
+        "evaluator_only_path_patterns": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 1024 },
+          "uniqueItems": true
+        },
+        "non_runtime_path_patterns": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 1024 },
+          "uniqueItems": true
+        },
+        "rule": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    }
+  }
+}

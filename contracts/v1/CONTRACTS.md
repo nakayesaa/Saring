@@ -15,6 +15,16 @@ meaning and cross-record invariants that JSON Schema cannot enforce alone.
 | Evidence Brief | Deterministic fusion/renderer; optionally constrained LLM | Reviewer workflow and audit trail |
 | Analysis job | Next.js orchestration layer | Python analysis worker |
 | Progress event | Python analysis worker | PostgreSQL/Supabase Realtime and Processing UI |
+| Package bundle manifest | Authorized uploader or benchmark generator | Next.js intake and Python ingestion worker |
+| Ingestion job | Next.js orchestration layer | Python parser/OCR worker |
+| Ingestion claim response | Next.js orchestration layer | Python parser/OCR worker |
+| Ingestion progress event | Python parser/OCR worker | Next.js lease and progress handler |
+| Ingestion artifact prepare | Python worker request; Next.js response | Next.js artifact issuer; Python uploader |
+| Ingestion result callback | Python parser/OCR worker | Next.js validator and terminal commit |
+| Analysis claim response | Next.js orchestration layer | Python analysis worker |
+| Analysis worker progress | Python analysis worker | Next.js lease and progress handler |
+| Analysis artifact prepare | Python worker request; Next.js response | Next.js artifact issuer; Python uploader |
+| Analysis result callback | Python analysis worker | Next.js validator, persistence, and terminal commit |
 
 ## Canonical package invariants
 
@@ -90,6 +100,68 @@ meaning and cross-record invariants that JSON Schema cannot enforce alone.
 6. UI copy may be derived from stable `stage`; `message` is diagnostic context,
    not the source of workflow logic.
 
+## Ingestion transport invariants
+
+1. The raw `lease_token` is returned only to the claiming worker. Persistence
+   stores its cryptographic hash, and a reclaim creates a new token.
+2. Every progress, artifact-prepare, and result mutation must match the active
+   `job_id`, `run_id`, `worker_id`, and lease token. Stale mutations fail closed.
+3. Progress `event_id` and artifact `request_id` are idempotency keys. Replaying
+   progress does not duplicate state; replaying artifact preparation preserves
+   artifact IDs/object keys while refreshing only its ephemeral upload credentials.
+4. Accepted progress or heartbeat events extend the lease and return the new
+   `lease_expires_at`. Progress never commits a terminal job state.
+5. The server generates artifact IDs and object keys. Workers may upload only
+   to signed targets issued for the active job and declared artifact hashes.
+6. Successful ingestion requires exactly one `PARSER_RESULT` and one
+   `CANONICAL_SNAPSHOT`. Next.js verifies existence, size, hash, media type, and
+   schema before committing `COMPLETED` or `NEEDS_REVIEW`.
+7. `FAILED` contains no artifacts or parser summary and carries a sanitized,
+   explicitly retryable or non-retryable error.
+8. `snapshot_file` in parser-result v1 remains a portable local basename. The
+   result callback is the authoritative mapping to remote artifact identity.
+9. Signed download and upload URLs are ephemeral credentials: do not persist,
+   log, include in events, or expose to the browser.
+10. `UPLOADING_ARTIFACTS` is the last progress stage. Only a verified result
+    callback may commit a terminal status.
+11. Runtime validation additionally enforces `completed_units <= total_units`,
+    `attempt <= max_attempts`, summary count consistency, raw artifact hashes,
+    and equality between parser-result and callback semantic snapshot hashes.
+12. `input_contract_version` advertises the manifest actually present in the
+    claimed ZIP: golden fixtures may use `saring-package-bundle-manifest-1.0.0`;
+    production intake uses `saring-runtime-bundle-manifest-1.0.0`. Workers must
+    reject a bundle whose discovered manifest does not match the advertised version.
+13. Progress stages are monotonic within an attempt. A worker cannot move a job
+    from canonicalization or artifact upload back to parsing.
+
+## Analysis transport invariants
+
+The original claim response v1 omitted the semantic snapshot hash and is
+superseded by `saring-analysis-job-claim-response-2.0.0`. Production analysis
+workers must not consume claim v1.
+
+1. The authoritative production input is exactly one immutable
+   `saring-canonical-analysis-snapshot-1.0.0` artifact. Analysis workers do not
+   download or parse the original bundle again.
+2. The claim advertises the exact requested engine set. The worker returns
+   exactly one `saring-engine-result-2.0.0` artifact per requested engine.
+3. Every worker mutation matches the active `job_id`, `run_id`, `worker_id`,
+   and opaque lease token. Raw lease tokens and signed URLs are never persisted
+   in progress payloads or logs.
+4. Progress is monotonic and extends the lease. It cannot commit a terminal job
+   state; `UPLOADING_RESULTS` is its final stage.
+5. Next.js generates artifact IDs and object keys. Before persistence it checks
+   object existence, byte size, SHA-256, media type, schema, requested engine,
+   run, package, cutoff, and canonical snapshot hash.
+6. Only a verified result callback commits `COMPLETED`, `NEEDS_REVIEW`, or
+   `ABSTAINED`. `FAILED` carries no artifacts and only a sanitized error.
+7. Callback retries are idempotent. Reusing an event, request, or callback ID
+   with different content fails closed; an expired/reclaimed lease rejects stale
+   mutations.
+8. Result summary counts are derived from the uploaded results and must match
+   the callback. A `LOW_CONFIDENCE` result yields `NEEDS_REVIEW`; all-abstained
+   or not-applicable results yield `ABSTAINED`.
+
 ## Versioning
 
 The frozen constants are:
@@ -101,6 +173,14 @@ saring-engine-result-1.0.0
 saring-evidence-brief-1.0.0
 saring-analysis-job-1.0.0
 saring-analysis-progress-event-1.0.0
+saring-ingestion-job-claim-response-1.0.0
+saring-ingestion-progress-event-1.0.0
+saring-ingestion-artifact-prepare-1.0.0
+saring-ingestion-result-callback-1.0.0
+saring-analysis-job-claim-response-1.0.0
+saring-analysis-worker-progress-event-1.0.0
+saring-analysis-artifact-prepare-1.0.0
+saring-analysis-result-callback-1.0.0
 ```
 
 Unknown major versions fail closed. Breaking changes require a new directory

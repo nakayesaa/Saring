@@ -1,0 +1,18 @@
+{
+  "schema_version": "saring-analysis-worker-progress-event-1.0.0",
+  "event_id": "analysis-event-stage-mismatch",
+  "sequence": 2,
+  "job_id": "333cc7a6-4c38-48c7-807e-ef017db38f04",
+  "run_id": "AR:11111111-2222-4333-8444-555555555555",
+  "worker_id": "saring-python-local-01",
+  "lease_token": "analysis_lease_token_1234567890abcdef",
+  "event_type": "PROGRESS",
+  "engine": "DOCUMENT",
+  "stage": "RUNNING_GRAPH_ENGINE",
+  "completed_units": 45,
+  "total_units": 98,
+  "unit_label": "records",
+  "message": "This engine and stage must be rejected.",
+  "finding_count": 0,
+  "occurred_at": "2026-08-09T12:01:30.000Z"
+}

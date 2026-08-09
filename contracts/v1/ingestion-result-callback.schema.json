@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/ingestion-result-callback.schema.json",
+  "title": "SARING Ingestion Result Callback v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "callback_id", "job_id", "run_id", "worker_id",
+    "lease_token", "status", "artifacts", "summary", "error", "completed_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-ingestion-result-callback-1.0.0" },
+    "callback_id": { "$ref": "#/$defs/id" },
+    "job_id": { "$ref": "#/$defs/id" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "worker_id": { "$ref": "#/$defs/id" },
+    "lease_token": { "$ref": "#/$defs/lease_token" },
+    "status": { "enum": ["COMPLETED", "NEEDS_REVIEW", "FAILED"] },
+    "artifacts": {
+      "type": "array",
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/artifact_reference" }
+    },
+    "summary": {
+      "oneOf": [{ "$ref": "#/$defs/summary" }, { "type": "null" }]
+    },
+    "error": {
+      "oneOf": [{ "$ref": "#/$defs/error" }, { "type": "null" }]
+    },
+    "completed_at": { "$ref": "#/$defs/timestamp" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "enum": ["COMPLETED", "NEEDS_REVIEW"] } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "contains": {
+              "type": "object",
+              "required": ["kind"],
+              "properties": { "kind": { "const": "PARSER_RESULT" } }
+            },
+            "minContains": 1,
+            "maxContains": 1
+          },
+          "summary": { "$ref": "#/$defs/summary" },
+          "error": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "enum": ["COMPLETED", "NEEDS_REVIEW"] } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "required": ["kind"],
+              "properties": { "kind": { "const": "CANONICAL_SNAPSHOT" } }
+            },
+            "minContains": 1,
+            "maxContains": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "FAILED" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "artifacts": { "type": "array", "maxItems": 0 },
+          "summary": { "type": "null" },
+          "error": { "$ref": "#/$defs/error" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "COMPLETED" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "summary": {
+            "type": "object",
+            "properties": { "parser_status": { "const": "PARSED" } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "NEEDS_REVIEW" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "summary": {
+            "type": "object",
+            "properties": { "parser_status": { "const": "NEEDS_REVIEW" } }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "lease_token": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "artifact_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id", "kind", "object_key", "sha256", "size_bytes",
+        "schema_version", "media_type"
+      ],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["PARSER_RESULT", "CANONICAL_SNAPSHOT"] },
+        "object_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+        },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 1073741824 },
+        "schema_version": {
+          "enum": [
+            "saring-parser-result-1.0.0",
+            "saring-canonical-analysis-snapshot-1.0.0"
+          ]
+        },
+        "media_type": { "const": "application/json" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "PARSER_RESULT" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": { "schema_version": { "const": "saring-parser-result-1.0.0" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "CANONICAL_SNAPSHOT" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "schema_version": { "const": "saring-canonical-analysis-snapshot-1.0.0" }
+            }
+          }
+        }
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parser_status", "document_count", "parsed_document_count",
+        "needs_review_document_count", "issue_count", "snapshot_hash"
+      ],
+      "properties": {
+        "parser_status": { "enum": ["PARSED", "NEEDS_REVIEW"] },
+        "document_count": { "type": "integer", "minimum": 0 },
+        "parsed_document_count": { "type": "integer", "minimum": 0 },
+        "needs_review_document_count": { "type": "integer", "minimum": 0 },
+        "issue_count": { "type": "integer", "minimum": 0 },
+        "snapshot_hash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "retryable"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "retryable": { "type": "boolean" }
+      }
+    },
+    "ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "callback_id", "accepted", "status"],
+      "properties": {
+        "schema_version": { "const": "saring-ingestion-result-callback-1.0.0" },
+        "callback_id": { "$ref": "#/$defs/id" },
+        "accepted": { "const": true },
+        "status": { "enum": ["COMPLETED", "NEEDS_REVIEW", "FAILED"] }
+      }
+    }
+  }
+}

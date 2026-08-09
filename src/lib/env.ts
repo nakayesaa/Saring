@@ -3,9 +3,7 @@ export type SupabasePublicConfig = {
   publishableKey: string;
 };
 
-export type AnalysisEngineConfig =
-  | { driver: "fixture" }
-  | { driver: "http"; url: URL; token: string; callbackToken: string; appBaseUrl: URL };
+export type AnalysisEngineConfig = { driver: "fixture" | "worker" };
 
 export type MalwareScannerConfig =
   | { driver: "synthetic-only" }
@@ -53,32 +51,16 @@ export function getSupabaseAdminConfig() {
 
 export function getAnalysisEngineConfig(): AnalysisEngineConfig {
   const driver = process.env.ANALYSIS_ENGINE_DRIVER?.trim() || "fixture";
-  if (driver === "fixture") return { driver };
-  if (driver !== "http") throw new Error("ANALYSIS_ENGINE_DRIVER must be fixture or http.");
-
-  const rawUrl = process.env.ANALYSIS_ENGINE_URL?.trim();
-  const rawAppBaseUrl = process.env.APP_BASE_URL?.trim();
-  const token = process.env.ANALYSIS_ENGINE_TOKEN?.trim();
-  const callbackToken = process.env.ANALYSIS_CALLBACK_TOKEN?.trim();
-  if (!rawUrl || !rawAppBaseUrl || !token || token.length < 32 || !callbackToken || callbackToken.length < 32) {
-    throw new Error("HTTP analysis engine configuration is incomplete.");
+  if (driver !== "fixture" && driver !== "worker") {
+    throw new Error("ANALYSIS_ENGINE_DRIVER must be fixture or worker.");
   }
-  const url = new URL(rawUrl);
-  const appBaseUrl = new URL(rawAppBaseUrl);
-  const localHttp = process.env.NODE_ENV !== "production" &&
-    url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname);
-  if (url.protocol !== "https:" && !localHttp) {
-    throw new Error("ANALYSIS_ENGINE_URL must use HTTPS outside local development.");
-  }
-  if (appBaseUrl.protocol !== "https:" && process.env.NODE_ENV === "production") {
-    throw new Error("APP_BASE_URL must use HTTPS in production.");
-  }
-  return { driver, url, token, callbackToken, appBaseUrl };
+  return { driver };
 }
 
 export function getAnalysisCallbackToken() {
   const token = process.env.ANALYSIS_CALLBACK_TOKEN?.trim();
-  return token && token.length >= 32 ? token : null;
+  const minimumLength = process.env.NODE_ENV === "production" ? 32 : 16;
+  return token && token.length >= minimumLength ? token : null;
 }
 
 export function getMalwareScannerConfig(): MalwareScannerConfig {

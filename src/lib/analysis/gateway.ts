@@ -12,7 +12,6 @@ import {
 } from "@/lib/analysis-progress";
 import { getGoldenCase } from "@/lib/golden-case";
 import { getAnalysisEngineConfig } from "@/lib/env";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export interface AnalysisEngineGateway {
   dispatch(
@@ -86,60 +85,14 @@ export class FixtureAnalysisEngineGateway implements AnalysisEngineGateway {
   }
 }
 
-export class HttpAnalysisEngineGateway implements AnalysisEngineGateway {
-  constructor(
-    private readonly url: URL,
-    private readonly token: string,
-    private readonly callbackToken: string,
-    private readonly appBaseUrl: URL,
-  ) {}
-
-  async *dispatch(
-    job: AnalysisJobContract,
-    context: AnalysisDispatchContext,
-  ): AsyncIterable<EngineDispatchMessage> {
-    void context;
-    const location = new URL(job.canonical_snapshot_location);
-    if (location.protocol !== "supabase:" || location.hostname !== "evidence") {
-      throw new Error("Unsupported canonical snapshot location.");
-    }
-    const objectKey = location.pathname.replace(/^\//, "");
-    const { data, error } = await createSupabaseAdminClient()
-      .storage.from("evidence")
-      .createSignedUrl(objectKey, 300);
-    if (error || !data) throw new Error("Unable to sign the canonical snapshot.");
-
-    const response = await fetch(this.url, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${this.token}`,
-        "content-type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify({
-        job,
-        canonical_snapshot: { url: data.signedUrl, expires_in_seconds: 300 },
-        callbacks: {
-          progress: new URL(`/api/worker/jobs/${job.job_id}/progress`, this.appBaseUrl).toString(),
-          result: new URL(`/api/worker/jobs/${job.job_id}/results`, this.appBaseUrl).toString(),
-          bearer_token: this.callbackToken,
-        },
-      }),
-      cache: "no-store",
-      redirect: "error",
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!response.ok) throw new Error(`Analysis engine rejected the job with status ${response.status}.`);
-  }
-}
-
 let gateway: AnalysisEngineGateway | undefined;
 
 export function getAnalysisEngineGateway() {
   if (gateway) return gateway;
   const config = getAnalysisEngineConfig();
-  gateway = config.driver === "fixture"
-    ? new FixtureAnalysisEngineGateway()
-    : new HttpAnalysisEngineGateway(config.url, config.token, config.callbackToken, config.appBaseUrl);
+  if (config.driver !== "fixture") {
+    throw new Error("The pull-based analysis worker must claim jobs through the Worker API.");
+  }
+  gateway = new FixtureAnalysisEngineGateway();
   return gateway;
 }

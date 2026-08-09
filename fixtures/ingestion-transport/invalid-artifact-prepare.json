@@ -1,0 +1,24 @@
+{
+  "schema_version": "saring-ingestion-artifact-prepare-1.0.0",
+  "request_id": "prepare-ingestion-001",
+  "job_id": "job-ingestion-001",
+  "run_id": "run-ingestion-001",
+  "worker_id": "saring-python-local-01",
+  "lease_token": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
+  "artifacts": [
+    {
+      "kind": "PARSER_RESULT",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "size_bytes": 18542,
+      "schema_version": "saring-parser-result-1.0.0",
+      "media_type": "application/json"
+    },
+    {
+      "kind": "PARSER_RESULT",
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "size_bytes": 19000,
+      "schema_version": "saring-parser-result-1.0.0",
+      "media_type": "application/json"
+    }
+  ]
+}

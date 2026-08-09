@@ -4,11 +4,16 @@ import { randomUUID } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import type { WorkspacePrincipal } from "@/lib/auth/principal";
 import { recordAuditEvent } from "@/lib/audit";
-import type {
-  AnalysisJobContract,
+import type { AnalysisJobContract } from "@/lib/analysis/contracts";
+import {
+  ANALYSIS_JOB_CONTRACT,
+  ANALYSIS_PIPELINE_VERSION,
+  CANONICAL_ANALYSIS_INPUT_CONTRACT,
+  ENGINE_RESULT_CONTRACT,
+  requestedAnalysisEngines,
 } from "@/lib/analysis/contracts";
-import { requestedAnalysisEngines } from "@/lib/analysis/contracts";
 import { getAnalysisEngineGateway } from "@/lib/analysis/gateway";
+import { persistEngineResult } from "@/lib/analysis/results";
 import type { AnalysisEngine, AnalysisProgressEvent } from "@/lib/analysis-progress";
 import { withTenantContext } from "@/lib/db/tenant";
 import { DomainError } from "@/lib/errors";
@@ -25,9 +30,9 @@ type AnalysisActor = Pick<
   "authUserId" | "organizationId" | "profileId"
 >;
 
-const PIPELINE_VERSION = "saring-analysis-pipeline-1.0.0";
 const ANALYSIS_RATE_WINDOW_MS = 60 * 60 * 1000;
 const MAX_ANALYSIS_JOBS_PER_WINDOW = 10;
+const REVIEWABLE_ANALYSIS_STATUSES = ["COMPLETED", "NEEDS_REVIEW", "ABSTAINED"] as const;
 
 function jsonValue(value: unknown) {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -44,6 +49,7 @@ function serializeJob(job: {
   canonicalSnapshotLocation: string;
   inputContractVersion: string;
   outputContractVersion: string;
+  pipelineVersion: string;
   idempotencyKey: string;
   attempt: number;
   maxAttempts: number;
@@ -56,7 +62,7 @@ function serializeJob(job: {
   package: { sourceId: string };
 }) {
   return parseAnalysisJob({
-    schema_version: "saring-analysis-job-1.0.0",
+    schema_version: ANALYSIS_JOB_CONTRACT,
     job_id: job.id,
     run_id: job.runId,
     organization_id: job.organizationId,
@@ -69,6 +75,7 @@ function serializeJob(job: {
     canonical_snapshot_location: job.canonicalSnapshotLocation,
     input_contract_version: job.inputContractVersion,
     output_contract_version: job.outputContractVersion,
+    pipeline_version: job.pipelineVersion,
     idempotency_key: job.idempotencyKey,
     attempt: job.attempt,
     max_attempts: job.maxAttempts,
@@ -118,18 +125,38 @@ export async function createAnalysisJob(
     }
     const canonicalDocument = canonicalSnapshot.document;
     const canonicalSnapshotHash = canonicalSnapshot.snapshotHash;
+    const canonicalArtifact = await transaction.ingestionArtifact.findFirst({
+      where: {
+        kind: "CANONICAL_SNAPSHOT",
+        schemaVersion: CANONICAL_ANALYSIS_INPUT_CONTRACT,
+        status: "VERIFIED",
+        job: {
+          packageId: procurementPackage.id,
+          sourceDocumentId: canonicalSnapshot.documentId,
+          status: { in: ["COMPLETED", "NEEDS_REVIEW"] },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!canonicalArtifact) {
+      throw new DomainError(
+        "ANALYSIS_SNAPSHOT_ARTIFACT_NOT_FOUND",
+        "The validated canonical snapshot artifact is not available for analysis.",
+        409,
+      );
+    }
     const idempotencyKey = contentHash({
       packageId: procurementPackage.id,
       canonicalSnapshotHash,
       engines,
-      pipelineVersion: PIPELINE_VERSION,
+      pipelineVersion: ANALYSIS_PIPELINE_VERSION,
     });
     const existing = await transaction.analysisJob.findFirst({
       where: {
         organizationId: principal.organizationId,
         packageId: procurementPackage.id,
         canonicalSnapshotHash,
-        pipelineVersion: PIPELINE_VERSION,
+        pipelineVersion: ANALYSIS_PIPELINE_VERSION,
         requestedEngines: { equals: engines },
       },
       orderBy: { createdAt: "desc" },
@@ -200,10 +227,11 @@ export async function createAnalysisJob(
         runId,
         requestedEngines: engines,
         canonicalSnapshotHash,
-        canonicalSnapshotLocation: `supabase://evidence/${canonicalDocument.storageKey}`,
-        inputContractVersion: "saring-canonical-package-1.0.0",
-        outputContractVersion: "saring-engine-result-1.0.0",
-        pipelineVersion: PIPELINE_VERSION,
+        canonicalSnapshotArtifactHash: canonicalArtifact.sha256.toLowerCase(),
+        canonicalSnapshotLocation: `supabase://evidence/${canonicalArtifact.objectKey}`,
+        inputContractVersion: CANONICAL_ANALYSIS_INPUT_CONTRACT,
+        outputContractVersion: ENGINE_RESULT_CONTRACT,
+        pipelineVersion: ANALYSIS_PIPELINE_VERSION,
         idempotencyKey: jobIdempotencyKey,
         attempt: nextAttempt,
         availableAt: now,
@@ -340,16 +368,6 @@ export async function recordAnalysisProgress(
   });
 }
 
-const findingModule = {
-  PRICE: "PRICE",
-  DOCUMENT: "DOCUMENT",
-  GRAPH: "GRAPH",
-  TECHNICAL: "DATA_QUALITY",
-  COMPLETENESS: "DATA_QUALITY",
-  DATA_QUALITY: "DATA_QUALITY",
-  FUSION: "FUSION",
-} as const;
-
 export async function recordEngineResult(
   actor: AnalysisActor,
   jobId: string,
@@ -362,77 +380,7 @@ export async function recordEngineResult(
       include: { package: { select: { sourceId: true, analysisCutoffAt: true } } },
     });
     if (!job) throw new DomainError("JOB_NOT_FOUND", "Analysis job not found.", 404);
-    if (
-      result.run_id !== job.runId ||
-      result.package_id !== job.package.sourceId ||
-      result.input_snapshot_hash !== job.canonicalSnapshotHash ||
-      Date.parse(result.analysis_cutoff_at) !== job.package.analysisCutoffAt.getTime()
-    ) {
-      throw new DomainError("ENGINE_RESULT_MISMATCH", "Engine result identity does not match the job snapshot.", 422);
-    }
-    if (!job.requestedEngines.includes(result.engine)) {
-      throw new DomainError("UNREQUESTED_ENGINE_RESULT", "The job did not request this engine result.", 422);
-    }
-    const payloadHash = contentHash(result);
-    const existing = await transaction.engineResult.findUnique({
-      where: { jobId_engine: { jobId, engine: result.engine } },
-      select: { payloadHash: true },
-    });
-    if (existing) {
-      if (existing.payloadHash !== payloadHash) {
-        throw new DomainError("ENGINE_RESULT_CONFLICT", "A different result already exists for this engine.", 409);
-      }
-      return { accepted: false, duplicate: true };
-    }
-
-    const engineResult = await transaction.engineResult.create({
-      data: {
-        jobId,
-        packageId: job.packageId,
-        externalResultId: result.result_id,
-        runId: result.run_id,
-        engine: result.engine,
-        status: result.status,
-        score: result.score,
-        confidence: result.confidence,
-        engineVersion: result.engine_version,
-        modelVersion: result.model_version,
-        inputSnapshotHash: result.input_snapshot_hash,
-        payloadHash,
-        payload: jsonValue(result),
-      },
-    });
-    const locators = new Map(result.evidence_locators.map((locator) => [locator.locator_id, locator]));
-    if (result.findings.length) {
-      await transaction.finding.createMany({
-        data: result.findings.map((finding) => ({
-          packageId: job.packageId,
-          engineResultId: engineResult.id,
-          externalFindingId: finding.finding_id,
-          type: finding.finding_type,
-          module: findingModule[result.engine],
-          moduleVersion: result.engine_version,
-          status: "OPEN",
-          score: finding.score,
-          confidence: finding.confidence,
-          featureSnapshotHash: result.input_snapshot_hash,
-          sourceCitations: jsonValue(
-            finding.evidence_locator_ids.flatMap((id) => locators.get(id) ?? []),
-          ),
-          alternativeExplanations: finding.alternative_explanations,
-        })),
-      });
-    }
-    await recordAuditEvent(transaction, {
-      organizationId: actor.organizationId,
-      actorUserId: actor.profileId,
-      packageId: job.packageId,
-      action: "ENGINE_RESULT_RECORDED",
-      targetType: "EngineResult",
-      targetId: engineResult.id,
-      metadata: { engine: result.engine, status: result.status, payloadHash },
-    });
-    return { accepted: true, duplicate: false };
+    return persistEngineResult(transaction, job, result, actor.profileId);
   });
 }
 
@@ -596,7 +544,7 @@ export async function getLatestAnalysisResults(
       },
     });
     if (!job) throw new DomainError("JOB_NOT_FOUND", "Analysis job not found.", 404);
-    if (job.status !== "COMPLETED") {
+    if (!REVIEWABLE_ANALYSIS_STATUSES.includes(job.status as typeof REVIEWABLE_ANALYSIS_STATUSES[number])) {
       throw new DomainError("ANALYSIS_NOT_COMPLETE", "Analysis results are not ready yet.", 409);
     }
     return {

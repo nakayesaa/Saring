@@ -1,6 +1,7 @@
 import type { GoldenCase } from "@/lib/golden-case";
 import { formatIdr } from "@/lib/golden-case";
 import type { CanonicalSnapshot } from "@/lib/intake/validation";
+import type { CanonicalAnalysisSnapshot } from "@/lib/intake/contracts";
 
 export type ExtractionCategoryKey =
   | "overview"
@@ -115,6 +116,86 @@ export function buildGoldenExtractionReview(item: GoldenCase): ExtractionReviewV
           field("schema-version", "Canonical schema", "saring-canonical-package-1.0.0", "canonical_package.json", "$.schema_version"),
           field("legal-basis", "Legal basis", "Authorized procurement", "authority/access_basis.json", "$.legal_basis_tag"),
           field("bundle-mode", "Bundle mode", "Synthetic demonstration", "manifest.json", "$.bundle_mode"),
+        ],
+      },
+    ],
+  };
+}
+
+export function buildAnalysisSnapshotExtractionReview(
+  snapshot: CanonicalAnalysisSnapshot,
+): ExtractionReviewViewModel {
+  const firstItem = snapshot.items[0];
+  const firstParticipant = snapshot.participants[0];
+  const reviewDocument = snapshot.documents.find((document) => document.status !== "PARSED");
+  const hpsTotal = snapshot.items.reduce((total, item) => total + item.hps_total, 0);
+  return {
+    packageId: snapshot.package_id,
+    packageName: snapshot.package.name,
+    schemaVersion: snapshot.schema_version,
+    parserVersion: snapshot.parser_version,
+    categories: [
+      {
+        key: "overview",
+        label: "Overview",
+        description: "Validated package identity and procurement context",
+        fields: [
+          field("package-name", "Package name", snapshot.package.name, "canonical-snapshot.json", "$.package.name"),
+          field("buyer", "Buyer institution", snapshot.package.buyer_name, "canonical-snapshot.json", "$.package.buyer_name"),
+          field("method", "Procurement method", snapshot.package.procurement_method, "canonical-snapshot.json", "$.package.procurement_method"),
+          field("cutoff", "Analysis cutoff", snapshot.analysis_cutoff_at, "canonical-snapshot.json", "$.analysis_cutoff_at"),
+        ],
+      },
+      {
+        key: "requirements",
+        label: "Requirements",
+        description: "Canonical item and specification context",
+        fields: [
+          field("item-count", "Package items", `${snapshot.items.length} records`, "canonical-snapshot.json", "$.items"),
+          field("primary-item", "Primary item", firstItem?.description ?? "No item supplied", "canonical-snapshot.json", "$.items[0]"),
+          field("quantity", "Required quantity", firstItem ? `${firstItem.quantity} ${firstItem.unit}` : "Not supplied", "canonical-snapshot.json", "$.items[0].quantity"),
+          field("category", "Category", firstItem?.category ?? "Not supplied", "canonical-snapshot.json", "$.items[0].category"),
+        ],
+      },
+      {
+        key: "pricing",
+        label: "Pricing",
+        description: "HPS, bids, and comparator availability",
+        fields: [
+          field("hps-total", "Total HPS", formatIdr(hpsTotal), "canonical-snapshot.json", "$.items[*].hps_total"),
+          field("bid-count", "Submitted bids", `${snapshot.bids.length} records`, "canonical-snapshot.json", "$.bids"),
+          field("comparator-count", "Market comparators", `${snapshot.price_comparators.length} records`, "canonical-snapshot.json", "$.price_comparators"),
+          field("currency", "Currency", snapshot.package.currency, "canonical-snapshot.json", "$.package.currency"),
+        ],
+      },
+      {
+        key: "vendors",
+        label: "Vendors",
+        description: "Resolved participant and document ownership",
+        fields: [
+          field("participant-count", "Participants", `${snapshot.participants.length} reconciled vendors`, "canonical-snapshot.json", "$.participants"),
+          field("first-vendor", "First participant", firstParticipant?.legal_name ?? "No participant supplied", "canonical-snapshot.json", "$.participants[0]"),
+          reviewDocument ? {
+            id: "document-review",
+            label: "Document requiring review",
+            value: reviewDocument.file_name,
+            source: reviewDocument.file_name,
+            locator: "Document-level parser outcome",
+            confidence: 0.5,
+            excerpt: `${reviewDocument.document_type}: ${reviewDocument.status}`,
+            status: "NEEDS_REVIEW",
+          } : field("document-health", "Document extraction", "No review warning", "canonical-snapshot.json", "$.quality"),
+        ],
+      },
+      {
+        key: "metadata",
+        label: "Metadata",
+        description: "Contract, provenance, and parser quality",
+        fields: [
+          field("document-count", "Documents", `${snapshot.documents.length} records`, "canonical-snapshot.json", "$.documents"),
+          field("schema-version", "Canonical schema", snapshot.schema_version, "canonical-snapshot.json", "$.schema_version"),
+          field("parser-version", "Parser version", snapshot.parser_version, "parser-result.json", "$.parser_version"),
+          field("bundle-mode", "Bundle mode", snapshot.package.bundle_mode, "canonical-snapshot.json", "$.package.bundle_mode"),
         ],
       },
     ],

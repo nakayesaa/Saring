@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/ingestion-artifact-prepare.schema.json",
+  "title": "SARING Ingestion Artifact Prepare Request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "request_id", "job_id", "run_id", "worker_id",
+    "lease_token", "artifacts"
+  ],
+  "properties": {
+    "schema_version": { "const": "saring-ingestion-artifact-prepare-1.0.0" },
+    "request_id": { "$ref": "#/$defs/id" },
+    "job_id": { "$ref": "#/$defs/id" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "worker_id": { "$ref": "#/$defs/id" },
+    "lease_token": { "$ref": "#/$defs/lease_token" },
+    "artifacts": { "$ref": "#/$defs/artifact_requests" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "lease_token": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "artifact_request": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sha256", "size_bytes", "schema_version", "media_type"],
+          "properties": {
+            "kind": { "const": "PARSER_RESULT" },
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "size_bytes": { "type": "integer", "minimum": 1, "maximum": 1073741824 },
+            "schema_version": { "const": "saring-parser-result-1.0.0" },
+            "media_type": { "const": "application/json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sha256", "size_bytes", "schema_version", "media_type"],
+          "properties": {
+            "kind": { "const": "CANONICAL_SNAPSHOT" },
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "size_bytes": { "type": "integer", "minimum": 1, "maximum": 1073741824 },
+            "schema_version": { "const": "saring-canonical-analysis-snapshot-1.0.0" },
+            "media_type": { "const": "application/json" }
+          }
+        }
+      ]
+    },
+    "artifact_requests": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/artifact_request" },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": { "kind": { "const": "PARSER_RESULT" } }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": { "kind": { "const": "CANONICAL_SNAPSHOT" } }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    },
+    "prepared_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id", "kind", "object_key", "sha256", "size_bytes",
+        "schema_version", "media_type", "upload"
+      ],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["PARSER_RESULT", "CANONICAL_SNAPSHOT"] },
+        "object_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"
+        },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 1073741824 },
+        "schema_version": {
+          "enum": [
+            "saring-parser-result-1.0.0",
+            "saring-canonical-analysis-snapshot-1.0.0"
+          ]
+        },
+        "media_type": { "const": "application/json" },
+        "upload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["url", "method", "headers", "expires_at"],
+          "properties": {
+            "url": { "type": "string", "format": "uri", "maxLength": 8192 },
+            "method": { "enum": ["PUT", "POST"] },
+            "headers": {
+              "type": "object",
+              "propertyNames": { "pattern": "^[A-Za-z0-9-]+$" },
+              "additionalProperties": { "type": "string", "maxLength": 4096 }
+            },
+            "expires_at": { "$ref": "#/$defs/timestamp" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "PARSER_RESULT" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": { "schema_version": { "const": "saring-parser-result-1.0.0" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "CANONICAL_SNAPSHOT" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "schema_version": { "const": "saring-canonical-analysis-snapshot-1.0.0" }
+            }
+          }
+        }
+      ]
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "request_id", "job_id", "run_id",
+        "lease_expires_at", "artifacts"
+      ],
+      "properties": {
+        "schema_version": { "const": "saring-ingestion-artifact-prepare-1.0.0" },
+        "request_id": { "$ref": "#/$defs/id" },
+        "job_id": { "$ref": "#/$defs/id" },
+        "run_id": { "$ref": "#/$defs/id" },
+        "lease_expires_at": { "$ref": "#/$defs/timestamp" },
+        "artifacts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/prepared_artifact" },
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "required": ["kind"],
+                "properties": { "kind": { "const": "PARSER_RESULT" } }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": ["kind"],
+                "properties": { "kind": { "const": "CANONICAL_SNAPSHOT" } }
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
+        }
+      }
+    }
+  }
+}

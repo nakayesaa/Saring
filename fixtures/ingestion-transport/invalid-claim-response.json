@@ -1,0 +1,30 @@
+{
+  "schema_version": "saring-ingestion-job-claim-response-1.0.0",
+  "job": {
+    "job_id": "job-ingestion-001",
+    "run_id": "run-ingestion-001",
+    "organization_id": "org-saring-primary",
+    "package_id": "SYN-LAPTOP-HYBRID-001",
+    "attempt": 1,
+    "max_attempts": 3,
+    "requested_parser_version": "document-parser-v1",
+    "input_contract_version": "saring-package-bundle-manifest-1.0.0",
+    "claimed_at": "2025-09-19T11:01:00Z",
+    "lease_expires_at": "2025-09-19T11:11:00Z"
+  },
+  "lease_token": "too-short",
+  "bundle": {
+    "download_url": "https://storage.example.test/signed/bundle.zip",
+    "expires_at": "2025-09-19T11:16:00Z",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "size_bytes": 1483036,
+    "mime_type": "application/zip",
+    "original_file_name": "bundle.zip"
+  },
+  "expected_artifacts": [],
+  "isolation": {
+    "evaluator_only_path_patterns": [],
+    "non_runtime_path_patterns": [],
+    "rule": "Partition before processing."
+  }
+}

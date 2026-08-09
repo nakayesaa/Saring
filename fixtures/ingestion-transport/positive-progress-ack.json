@@ -1,0 +1,6 @@
+{
+  "schema_version": "saring-ingestion-progress-event-1.0.0",
+  "event_id": "event-ingestion-0004",
+  "accepted": true,
+  "lease_expires_at": "2025-09-19T11:15:00Z"
+}

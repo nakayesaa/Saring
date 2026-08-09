@@ -1,0 +1,6 @@
+{
+  "schema_version": "saring-ingestion-result-callback-1.0.0",
+  "callback_id": "result-ingestion-001",
+  "accepted": true,
+  "status": "NEEDS_REVIEW"
+}

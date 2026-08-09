@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v2/analysis-job-claim-response.schema.json",
+  "title": "SARING Analysis Job Claim Response v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "job", "lease_token", "snapshot", "expected_artifacts"],
+  "properties": {
+    "schema_version": { "const": "saring-analysis-job-claim-response-2.0.0" },
+    "job": { "$ref": "#/$defs/job" },
+    "lease_token": { "$ref": "#/$defs/lease_token" },
+    "snapshot": { "$ref": "#/$defs/snapshot" },
+    "expected_artifacts": {
+      "type": "array", "minItems": 1, "maxItems": 7, "uniqueItems": true,
+      "items": { "$ref": "#/$defs/expected_artifact" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "engine": { "enum": ["PRICE", "DOCUMENT", "GRAPH", "TECHNICAL", "COMPLETENESS", "DATA_QUALITY", "FUSION"] },
+    "lease_token": { "type": "string", "minLength": 32, "maxLength": 512, "pattern": "^[A-Za-z0-9_-]+$" },
+    "job": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "job_id", "run_id", "organization_id", "package_id", "attempt", "max_attempts",
+        "next_progress_sequence", "requested_engines", "analysis_cutoff_at",
+        "canonical_snapshot_hash", "input_contract_version", "output_contract_version",
+        "pipeline_version", "claimed_at", "lease_expires_at"
+      ],
+      "properties": {
+        "job_id": { "$ref": "#/$defs/id" },
+        "run_id": { "$ref": "#/$defs/id" },
+        "organization_id": { "$ref": "#/$defs/id" },
+        "package_id": { "$ref": "#/$defs/id" },
+        "attempt": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "max_attempts": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "next_progress_sequence": { "type": "integer", "minimum": 1 },
+        "requested_engines": { "type": "array", "minItems": 1, "maxItems": 7, "uniqueItems": true, "items": { "$ref": "#/$defs/engine" } },
+        "analysis_cutoff_at": { "$ref": "#/$defs/timestamp" },
+        "canonical_snapshot_hash": {
+          "allOf": [{ "$ref": "#/$defs/sha256" }],
+          "description": "SHA-256 of deterministic canonical JSON semantics; use for EngineResult.input_snapshot_hash."
+        },
+        "input_contract_version": { "const": "saring-canonical-analysis-snapshot-1.0.0" },
+        "output_contract_version": { "const": "saring-engine-result-2.0.0" },
+        "pipeline_version": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "claimed_at": { "$ref": "#/$defs/timestamp" },
+        "lease_expires_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "snapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["download_url", "expires_at", "sha256", "size_bytes", "schema_version", "media_type"],
+      "properties": {
+        "download_url": { "type": "string", "format": "uri", "maxLength": 8192 },
+        "expires_at": { "$ref": "#/$defs/timestamp" },
+        "sha256": {
+          "allOf": [{ "$ref": "#/$defs/sha256" }],
+          "description": "SHA-256 of the exact downloadable artifact bytes, including whitespace and trailing newline."
+        },
+        "size_bytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+        "schema_version": { "const": "saring-canonical-analysis-snapshot-1.0.0" },
+        "media_type": { "const": "application/json" }
+      }
+    },
+    "expected_artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "engine", "schema_version", "media_type"],
+      "properties": {
+        "kind": { "const": "ENGINE_RESULT" },
+        "engine": { "$ref": "#/$defs/engine" },
+        "schema_version": { "const": "saring-engine-result-2.0.0" },
+        "media_type": { "const": "application/json" }
+      }
+    }
+  }
+}
