@@ -11,7 +11,6 @@ import { assertBundleIsSafe } from "@/lib/intake/malware-scanner";
 import {
   CANONICAL_PACKAGE_CONTRACT,
   DEFAULT_PARSER_VERSION,
-  PACKAGE_BUNDLE_CONTRACT,
 } from "@/lib/intake/contracts";
 import { validateHybridBundle, type ValidatedHybridBundle } from "@/lib/intake/hybrid-validation";
 import {
@@ -130,7 +129,7 @@ function rawBundlePolicy(bundle: ValidatedHybridBundle) {
   return {
     classification: synthetic ? "SYNTHETIC" as const : "RESTRICTED" as const,
     legalBasis: synthetic ? "SYNTHETIC" as const :
-      bundle.manifest.legal_basis_tag === "PUBLIC_INFORMATION" ? "PUBLIC_INFORMATION" as const :
+      bundle.legalBasisTag === "PUBLIC_INFORMATION" ? "PUBLIC_INFORMATION" as const :
         "AUTHORIZED_PROCUREMENT" as const,
     retentionClass: synthetic ? "TEMPORARY_ENRICHMENT" as const : "PROCUREMENT_CASE" as const,
   };
@@ -155,7 +154,7 @@ async function finalizeHybridUpload(
       where: {
         organizationId_sourceId: {
           organizationId: principal.organizationId,
-          sourceId: bundle.manifest.tender_source_id,
+          sourceId: bundle.sourceId,
         },
       },
       select: { id: true },
@@ -171,7 +170,7 @@ async function finalizeHybridUpload(
     const procurementPackage = await transaction.tenderPackage.create({
       data: {
         organizationId: principal.organizationId,
-        sourceId: bundle.manifest.tender_source_id,
+        sourceId: bundle.sourceId,
         name: bundle.package.name,
         fiscalYear: bidDeadline.getUTCFullYear(),
         procurementMethod: bundle.package.procurement_method,
@@ -202,11 +201,11 @@ async function finalizeHybridUpload(
           bundleId: bundle.manifest.bundle_id,
           bundleMode: bundle.manifest.bundle_mode,
           manifestCreatedAt: bundle.manifest.created_at,
-          participantCount: bundle.manifest.participant_count,
-          expectedFileCount: bundle.manifest.expected_files.length,
+          participantCount: bundle.package.participant_count,
+          expectedFileCount: bundle.expectedFileCount,
           archivePrefix: bundle.archivePrefix,
           evaluatorAssetsPresent: bundle.evaluatorAssetsPresent,
-          inputContractVersion: PACKAGE_BUNDLE_CONTRACT,
+          inputContractVersion: bundle.inputContractVersion,
         },
       },
     });
@@ -220,7 +219,7 @@ async function finalizeHybridUpload(
         runId,
         inputBundleHash: bundle.fileHash,
         inputBundleLocation: `supabase://evidence/${objectKey}`,
-        inputContractVersion: PACKAGE_BUNDLE_CONTRACT,
+        inputContractVersion: bundle.inputContractVersion,
         outputContractVersion: CANONICAL_PACKAGE_CONTRACT,
         requestedParserVersion: DEFAULT_PARSER_VERSION,
         idempotencyKey,
@@ -235,7 +234,7 @@ async function finalizeHybridUpload(
         sourceRecordId: bundle.manifest.bundle_id,
         sourceUrlOrEndpoint: `supabase-storage:${BUCKET}/${objectKey}`,
         retrievedAt: new Date(),
-        effectiveFrom: new Date(bundle.package.announcement_at),
+        effectiveFrom: new Date(bundle.package.announcement_at ?? bundle.package.bid_deadline_at),
         rawPayloadHash: bundle.fileHash,
         rawPayloadStorageKey: objectKey,
         parserVersion: "UNPARSED",

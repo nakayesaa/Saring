@@ -5,36 +5,43 @@
   "package_id": "SYN-LAPTOP-HYBRID-001",
   "analysis_cutoff_at": "2025-09-19T11:00:00.000Z",
   "engine": "DOCUMENT",
-  "engine_version": "document-engine-golden-1.0.0",
-  "model_version": "document-similarity-golden-1.0.0",
+  "engine_version": "saring-document-engine-0.2.0",
+  "model_version": "document-cross-evidence-0.2.0",
   "status": "SCORED",
   "score": 0.81,
   "confidence": 0.92,
-  "summary": "Two non-template similarities are supported by page-level evidence and require human review.",
+  "summary": "Dua sinyal dokumen didukung oleh lokasi sumber dan memerlukan review manusia.",
   "findings": [
     {
       "finding_id": "FINDING:DOCUMENT:001",
-      "finding_type": "NON_TEMPLATE_PASSAGE_SIMILARITY",
-      "scope": "CROSS_VENDOR",
-      "subject_ids": ["VENDOR:ALPHA", "VENDOR:BETA"],
-      "score": 0.84,
-      "confidence": 0.93,
-      "summary": "Two vendor submissions share a distinctive non-template passage.",
+      "finding_type": "CROSS_DOCUMENT_FACT_CONTRADICTION",
+      "scope": "VENDOR",
+      "subject_ids": ["VENDOR:ALPHA"],
+      "score": 0.82,
+      "confidence": 0.91,
+      "summary": "Dua dokumen Vendor Alpha memuat masa garansi yang berbeda dan perlu dikonfirmasi.",
       "evidence_locator_ids": ["LOC:DOCUMENT:001", "LOC:DOCUMENT:002"],
-      "alternative_explanations": ["Both vendors may have used the same external proposal consultant."],
-      "metrics": { "similarity": 0.96, "template_excluded": true }
+      "alternative_explanations": ["Perbedaan dapat berasal dari revisi dokumen atau cakupan garansi yang tidak sama."],
+      "metrics": {
+        "attribute": "warranty_months",
+        "relation": "NOT_EQUAL",
+        "review_decision": "REVIEW_REQUIRED",
+        "reason_code": "CONFLICTING_EXPLICIT_VALUES",
+        "predictor": "cross_encoder_nli",
+        "retrieval_score": 0.94
+      }
     },
     {
       "finding_id": "FINDING:DOCUMENT:002",
-      "finding_type": "SHARED_RARE_ERROR",
+      "finding_type": "RARE_TEXT_OVERLAP",
       "scope": "CROSS_VENDOR",
       "subject_ids": ["VENDOR:ALPHA", "VENDOR:BETA"],
       "score": 0.76,
       "confidence": 0.89,
-      "summary": "The same rare typographical error appears in both submissions.",
-      "evidence_locator_ids": ["LOC:DOCUMENT:001", "LOC:DOCUMENT:002"],
-      "alternative_explanations": ["The text may originate from a shared manufacturer specification."],
-      "metrics": { "rare_error_frequency": 2, "corpus_document_count": 98 }
+      "summary": "Passage non-template yang sama ditemukan pada dua dokumen vendor.",
+      "evidence_locator_ids": ["LOC:DOCUMENT:003", "LOC:DOCUMENT:004"],
+      "alternative_explanations": ["Teks dapat berasal dari konsultan atau sumber spesifikasi produsen yang sama."],
+      "metrics": { "similarity": 0.96, "template_excluded": true, "rare_error_frequency": 2 }
     }
   ],
   "evidence_locators": [
@@ -42,21 +49,49 @@
       "schema_version": "saring-evidence-locator-1.0.0",
       "locator_id": "LOC:DOCUMENT:001",
       "package_id": "SYN-LAPTOP-HYBRID-001",
-      "source_type": "DOCUMENT_PAGE",
+      "source_type": "DOCUMENT_REGION",
       "source_hash": "1111111111111111111111111111111111111111111111111111111111111111",
       "document_id": "DOC:ALPHA:TECHNICAL",
       "page_number": 7,
-      "label": "Alpha technical submission, page 7"
+      "bbox": [72.4, 184.2, 512.8, 232.6],
+      "excerpt": "Masa garansi perangkat adalah 36 bulan sejak serah terima.",
+      "label": "Penawaran teknis Vendor Alpha"
     },
     {
       "schema_version": "saring-evidence-locator-1.0.0",
       "locator_id": "LOC:DOCUMENT:002",
       "package_id": "SYN-LAPTOP-HYBRID-001",
-      "source_type": "DOCUMENT_PAGE",
+      "source_type": "DOCUMENT_REGION",
       "source_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "document_id": "DOC:ALPHA:COMMERCIAL",
+      "page_number": 4,
+      "bbox": [68.1, 291.5, 506.3, 338.9],
+      "excerpt": "Garansi produk diberikan selama 24 bulan.",
+      "label": "Penawaran komersial Vendor Alpha"
+    },
+    {
+      "schema_version": "saring-evidence-locator-1.0.0",
+      "locator_id": "LOC:DOCUMENT:003",
+      "package_id": "SYN-LAPTOP-HYBRID-001",
+      "source_type": "DOCUMENT_REGION",
+      "source_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+      "document_id": "DOC:ALPHA:TECHNICAL",
+      "page_number": 9,
+      "bbox": [74.2, 402.1, 518.6, 459.7],
+      "excerpt": "Konfigurasi dilakukan secara menyeluruh hingga perangkat siap digunkan.",
+      "label": "Passage Vendor Alpha"
+    },
+    {
+      "schema_version": "saring-evidence-locator-1.0.0",
+      "locator_id": "LOC:DOCUMENT:004",
+      "package_id": "SYN-LAPTOP-HYBRID-001",
+      "source_type": "DOCUMENT_REGION",
+      "source_hash": "4444444444444444444444444444444444444444444444444444444444444444",
       "document_id": "DOC:BETA:TECHNICAL",
-      "page_number": 6,
-      "label": "Beta technical submission, page 6"
+      "page_number": 8,
+      "bbox": [71.9, 389.4, 516.2, 447.8],
+      "excerpt": "Konfigurasi dilakukan secara menyeluruh hingga perangkat siap digunkan.",
+      "label": "Passage Vendor Beta"
     }
   ],
   "alternative_explanations": [

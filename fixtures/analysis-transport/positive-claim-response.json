@@ -13,7 +13,7 @@
     "canonical_snapshot_hash": "c8eace75fc162f64d73c79b7f5e57d0a6c76ef238a757e3b919106da4339bfc0",
     "input_contract_version": "saring-canonical-analysis-snapshot-1.0.0",
     "output_contract_version": "saring-engine-result-2.0.0",
-    "pipeline_version": "saring-analysis-pipeline-2.1.0",
+    "pipeline_version": "saring-analysis-pipeline-2.2.0",
     "claimed_at": "2026-08-09T12:00:00.000Z",
     "lease_expires_at": "2026-08-09T12:10:00.000Z"
   },

@@ -9,8 +9,8 @@
     {
       "kind": "ENGINE_RESULT",
       "engine": "DOCUMENT",
-      "sha256": "c85ccd5f281411fda43d17bd4cbbbe0721a78259b99752c9539761a7b19bce6d",
-      "size_bytes": 2890,
+      "sha256": "16ce210aab62d4b369a3b206f2d4c4a2b984be054921081e44898c2d6e0d2bfc",
+      "size_bytes": 4437,
       "schema_version": "saring-engine-result-2.0.0",
       "media_type": "application/json"
     }

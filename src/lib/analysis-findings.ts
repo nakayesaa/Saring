@@ -8,10 +8,14 @@ export type FindingScope = "PACKAGE" | "VENDOR" | "CROSS_VENDOR" | "ITEM";
 
 export type AnalysisEvidenceLocatorView = {
   locator_id: string;
+  source_type: GeneralEngineResult["evidence_locators"][number]["source_type"];
   label: string;
   source: string;
   locator: string;
   excerpt: string;
+  document_id: string | null;
+  page_number: number | null;
+  bbox: [number, number, number, number] | null;
 };
 
 export type AnalysisFindingView = {
@@ -24,6 +28,7 @@ export type AnalysisFindingView = {
   title: string;
   summary: string;
   metric: string;
+  metrics: Record<string, string | number | boolean | null>;
   evidence_locator_ids: string[];
   evidence_locators: AnalysisEvidenceLocatorView[];
   alternative_explanations: string[];
@@ -69,10 +74,37 @@ export type AnalysisFindingsViewModel = {
 
 const primaryEngines = ["PRICE", "DOCUMENT", "GRAPH"] as const;
 
-function readableFindingType(value: string) {
+export const findingPresentation = {
+  CROSS_DOCUMENT_FACT_CONTRADICTION: {
+    label: "Kontradiksi fakta lintas dokumen",
+    description: "Dua dokumen vendor memuat nilai yang tidak konsisten dan perlu dibandingkan oleh reviewer.",
+  },
+  RARE_TEXT_OVERLAP: {
+    label: "Kemiripan teks tidak lazim",
+    description: "Passage non-template yang serupa ditemukan pada dokumen berbeda dan perlu ditelusuri ke sumbernya.",
+  },
+} as const;
+
+export function readableFindingType(value: string) {
+  const presentation = findingPresentation[value as keyof typeof findingPresentation];
+  if (presentation) return presentation.label;
   return value.toLowerCase().split("_").map((part) =>
     part ? part[0].toUpperCase() + part.slice(1) : part,
   ).join(" ");
+}
+
+function projectLocator(locator: GeneralEngineResult["evidence_locators"][number]): AnalysisEvidenceLocatorView {
+  return {
+    locator_id: locator.locator_id,
+    source_type: locator.source_type,
+    label: locator.label ?? readableFindingType(locator.source_type),
+    source: locatorSource(locator),
+    locator: locatorPosition(locator),
+    excerpt: locator.excerpt ?? "Buka sumber yang dirujuk untuk memverifikasi temuan ini.",
+    document_id: locator.document_id ?? null,
+    page_number: locator.page_number ?? null,
+    bbox: locator.bbox ?? null,
+  };
 }
 
 function locatorSource(locator: GeneralEngineResult["evidence_locators"][number]) {
@@ -125,16 +157,11 @@ export function projectAnalysisFindings(input: {
         title: readableFindingType(finding.finding_type),
         summary: finding.summary,
         metric: displayMetric(finding.metrics),
+        metrics: finding.metrics ?? {},
         evidence_locator_ids: finding.evidence_locator_ids,
         evidence_locators: finding.evidence_locator_ids.flatMap((id) => {
           const locator = locators.get(id);
-          return locator ? [{
-            locator_id: locator.locator_id,
-            label: locator.label ?? readableFindingType(locator.source_type),
-            source: locatorSource(locator),
-            locator: locatorPosition(locator),
-            excerpt: locator.excerpt ?? "Open the cited source to verify this signal.",
-          }] : [];
+          return locator ? [projectLocator(locator)] : [];
         }),
         alternative_explanations: finding.alternative_explanations,
       })),
@@ -147,18 +174,16 @@ export function projectAnalysisFindings(input: {
       module: result.engine,
       subject_id: input.packageId,
       reason: result.abstention_reason ?? result.summary,
-      evidence_locator: locator ? {
-        locator_id: locator.locator_id,
-        label: locator.label ?? readableFindingType(locator.source_type),
-        source: locatorSource(locator),
-        locator: locatorPosition(locator),
-        excerpt: locator.excerpt ?? result.summary,
-      } : {
+      evidence_locator: locator ? projectLocator(locator) : {
         locator_id: `ABSTENTION:${result.result_id}`,
+        source_type: "JSON_PATH",
         label: `${readableFindingType(result.engine)} abstention`,
         source: result.engine_version,
         locator: result.result_id,
         excerpt: result.summary,
+        document_id: null,
+        page_number: null,
+        bbox: null,
       },
     }];
   });
@@ -233,10 +258,14 @@ function findingSubjects(finding: GoldenFinding) {
 function toFindingView(finding: GoldenFinding): AnalysisFindingView {
   const evidenceLocators = finding.citations.map((citation, index) => ({
     locator_id: `LOC-${finding.id}-${index + 1}`,
+    source_type: "DOCUMENT_REGION" as const,
     label: citation.label,
     source: citation.source,
     locator: citation.locator,
     excerpt: citation.excerpt,
+    document_id: citation.source,
+    page_number: null,
+    bbox: null,
   }));
 
   return {
@@ -249,6 +278,7 @@ function toFindingView(finding: GoldenFinding): AnalysisFindingView {
     title: finding.title,
     summary: finding.summary,
     metric: finding.metric,
+    metrics: {},
     evidence_locator_ids: evidenceLocators.map((locator) => locator.locator_id),
     evidence_locators: evidenceLocators,
     alternative_explanations: [finding.alternativeExplanation],
@@ -283,10 +313,14 @@ export function buildGoldenAnalysisFindings(item: GoldenCase): AnalysisFindingsV
         reason: finding.summary,
         evidence_locator: {
           locator_id: `LOC-${finding.id}-1`,
+          source_type: "JSON_PATH",
           label: locator?.label ?? "Low-confidence extraction",
           source: locator?.source ?? "canonical extraction",
           locator: locator?.locator ?? finding.id,
           excerpt: locator?.excerpt ?? finding.alternativeExplanation,
+          document_id: null,
+          page_number: null,
+          bbox: null,
         },
       };
     });

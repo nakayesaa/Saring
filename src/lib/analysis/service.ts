@@ -502,6 +502,7 @@ export async function getLatestAnalysisJob(
     const job = await transaction.analysisJob.findFirst({
       where: {
         organizationId: principal.organizationId,
+        pipelineVersion: ANALYSIS_PIPELINE_VERSION,
         package: { sourceId: packageSourceId },
       },
       orderBy: { createdAt: "desc" },
@@ -535,6 +536,7 @@ export async function getLatestAnalysisResults(
     const job = await transaction.analysisJob.findFirst({
       where: {
         organizationId: principal.organizationId,
+        pipelineVersion: ANALYSIS_PIPELINE_VERSION,
         package: { sourceId: packageSourceId },
       },
       orderBy: { createdAt: "desc" },

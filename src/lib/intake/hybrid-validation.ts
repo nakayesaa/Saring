@@ -5,7 +5,14 @@ import { basename, posix } from "node:path";
 import yauzl, { type Entry, type ZipFile } from "yauzl";
 import { z } from "zod";
 import { DomainError } from "@/lib/errors";
-import { parsePackageBundleManifest, type PackageBundleManifest } from "@/lib/intake/contracts";
+import {
+  PACKAGE_BUNDLE_CONTRACT,
+  parsePackageBundleManifest,
+  parseRuntimeBundleManifest,
+  RUNTIME_BUNDLE_CONTRACT,
+  type PackageBundleManifest,
+  type RuntimeBundleManifest,
+} from "@/lib/intake/contracts";
 import { MAX_UPLOAD_BYTES } from "@/lib/intake/validation";
 
 const MAX_ARCHIVE_ENTRIES = 500;
@@ -18,23 +25,27 @@ const packageMetadataSchema = z.strictObject({
   buyer: z.string().min(1).max(500),
   procurement_method: z.string().min(1).max(240),
   anchor_reference_id: z.string().min(1).max(240).optional(),
-  announcement_at: z.iso.datetime({ offset: true }),
+  announcement_at: z.iso.datetime({ offset: true }).optional(),
   bid_deadline_at: z.iso.datetime({ offset: true }),
   analysis_cutoff_at: z.iso.datetime({ offset: true }),
   award_at: z.iso.datetime({ offset: true }).optional(),
   participant_count: z.number().int().nonnegative(),
   bid_row_count: z.number().int().nonnegative().optional(),
-  item_count: z.number().int().nonnegative(),
+  item_count: z.number().int().nonnegative().optional(),
   currency: z.string().regex(/^[A-Z]{3}$/),
-  data_origin: z.string().min(1).max(240),
+  data_origin: z.string().min(1).max(240).optional(),
 });
 
 export type HybridPackageMetadata = z.infer<typeof packageMetadataSchema>;
 
 export type ValidatedHybridBundle = {
   kind: "RAW_HYBRID";
-  manifest: PackageBundleManifest;
+  manifest: PackageBundleManifest | RuntimeBundleManifest;
   package: HybridPackageMetadata;
+  sourceId: string;
+  legalBasisTag: PackageBundleManifest["legal_basis_tag"];
+  inputContractVersion: typeof PACKAGE_BUNDLE_CONTRACT | typeof RUNTIME_BUNDLE_CONTRACT;
+  expectedFileCount: number;
   fileHash: string;
   byteSize: number;
   mimeType: "application/zip";
@@ -147,11 +158,17 @@ function parseJson(buffer: Buffer, label: string) {
 }
 
 async function findManifest(zip: ZipFile, entries: Map<string, Entry>) {
-  const candidates = [...entries.entries()].filter(([path]) => basename(path).toLowerCase() === "manifest.json");
-  const valid: Array<{ path: string; manifest: PackageBundleManifest }> = [];
+  const candidates = [...entries.entries()].filter(([path]) =>
+    ["manifest.json", "runtime-bundle-manifest.json"].includes(basename(path).toLowerCase()),
+  );
+  const valid: Array<{ path: string; manifest: PackageBundleManifest | RuntimeBundleManifest }> = [];
   for (const [path, entry] of candidates) {
     try {
-      valid.push({ path, manifest: parsePackageBundleManifest(parseJson(await readEntry(zip, entry), path)) });
+      const raw = parseJson(await readEntry(zip, entry), path);
+      const manifest = basename(path).toLowerCase() === "runtime-bundle-manifest.json"
+        ? parseRuntimeBundleManifest(raw)
+        : parsePackageBundleManifest(raw);
+      valid.push({ path, manifest });
     } catch (error) {
       if (!(error instanceof DomainError && error.code === "INVALID_BUNDLE_MANIFEST")) throw error;
     }
@@ -159,6 +176,10 @@ async function findManifest(zip: ZipFile, entries: Map<string, Entry>) {
   if (valid.length === 0) invalid("NOT_HYBRID_BUNDLE", "No SARING hybrid bundle manifest was found.");
   if (valid.length > 1) invalid("INVALID_BUNDLE_MANIFEST", "The archive contains multiple valid bundle manifests.");
   return valid[0];
+}
+
+function isRuntimeManifest(manifest: PackageBundleManifest | RuntimeBundleManifest): manifest is RuntimeBundleManifest {
+  return "schema_version" in manifest && manifest.schema_version === RUNTIME_BUNDLE_CONTRACT;
 }
 
 export async function validateHybridBundle(bytes: ArrayBuffer): Promise<ValidatedHybridBundle> {
@@ -174,19 +195,23 @@ export async function validateHybridBundle(bytes: ArrayBuffer): Promise<Validate
     zip = await openZip(buffer);
     const entries = await collectEntries(zip);
     const { path: manifestPath, manifest } = await findManifest(zip, entries);
-    const archivePrefix = manifestPath.slice(0, -"manifest.json".length);
+    const manifestName = basename(manifestPath);
+    const archivePrefix = manifestPath.slice(0, -manifestName.length);
     const expectedPaths = new Set([manifestPath]);
+    const inventory = isRuntimeManifest(manifest)
+      ? manifest.files.map((file) => ({ relativePath: file.path, sizeBytes: file.size_bytes, sha256: file.sha256 }))
+      : manifest.expected_files.map((file) => ({ relativePath: file.relative_path, sizeBytes: file.size_bytes, sha256: file.sha256 }));
 
-    for (const expected of manifest.expected_files) {
-      const relativePath = safePath(expected.relative_path);
-      if (relativePath !== expected.relative_path || relativePath === "manifest.json") {
+    for (const expected of inventory) {
+      const relativePath = safePath(expected.relativePath);
+      if (relativePath !== expected.relativePath || ["manifest.json", "runtime-bundle-manifest.json"].includes(relativePath)) {
         invalid("INVALID_BUNDLE_MANIFEST", "Manifest paths must be normalized and relative to the bundle root.");
       }
       const path = `${archivePrefix}${relativePath}`;
       if (expectedPaths.has(path)) invalid("INVALID_BUNDLE_MANIFEST", "Manifest paths must be unique.");
       expectedPaths.add(path);
       const entry = entries.get(path);
-      if (!entry || entry.uncompressedSize !== expected.size_bytes) {
+      if (!entry || entry.uncompressedSize !== expected.sizeBytes) {
         invalid("BUNDLE_INTEGRITY_MISMATCH", `Missing file or size mismatch: ${relativePath}`);
       }
       if ((await hashEntry(zip, entry)).toLowerCase() !== expected.sha256.toLowerCase()) {
@@ -198,18 +223,19 @@ export async function validateHybridBundle(bytes: ArrayBuffer): Promise<Validate
       invalid("BUNDLE_FILE_SET_MISMATCH", "Archive files do not exactly match the manifest inventory.");
     }
 
-    const packageCandidates = manifest.expected_files.filter(({ relative_path }) =>
-      /^package_[^/]+\/package\.json$/.test(relative_path),
+    const packageCandidates = inventory.filter(({ relativePath }) =>
+      /^package_[^/]+\/package\.json$/.test(relativePath),
     );
     if (packageCandidates.length !== 1) {
       invalid("INVALID_BUNDLE_METADATA", "The bundle must contain exactly one package metadata file.");
     }
-    const packagePath = `${archivePrefix}${packageCandidates[0].relative_path}`;
+    const packagePath = `${archivePrefix}${packageCandidates[0].relativePath}`;
     const packageMetadata = packageMetadataSchema.parse(parseJson(await readEntry(zip, entries.get(packagePath)!), packagePath));
+    const sourceId = isRuntimeManifest(manifest) ? manifest.package_id : manifest.tender_source_id;
     if (
-      packageMetadata.canonical_id !== manifest.tender_source_id ||
+      packageMetadata.canonical_id !== sourceId ||
       packageMetadata.analysis_cutoff_at !== manifest.analysis_cutoff_at ||
-      packageMetadata.participant_count !== manifest.participant_count ||
+      (!isRuntimeManifest(manifest) && packageMetadata.participant_count !== manifest.participant_count) ||
       Date.parse(packageMetadata.analysis_cutoff_at) < Date.parse(packageMetadata.bid_deadline_at)
     ) {
       invalid("BUNDLE_IDENTITY_MISMATCH", "Package metadata does not reconcile with the bundle manifest.");
@@ -219,13 +245,18 @@ export async function validateHybridBundle(bytes: ArrayBuffer): Promise<Validate
       kind: "RAW_HYBRID",
       manifest,
       package: packageMetadata,
+      sourceId,
+      legalBasisTag: isRuntimeManifest(manifest)
+        ? manifest.bundle_mode === "SYNTHETIC" ? "SYNTHETIC" : "AUTHORIZED_PROCUREMENT"
+        : manifest.legal_basis_tag,
+      inputContractVersion: isRuntimeManifest(manifest) ? RUNTIME_BUNDLE_CONTRACT : PACKAGE_BUNDLE_CONTRACT,
+      expectedFileCount: inventory.length,
       fileHash: createHash("sha256").update(buffer).digest("hex"),
       byteSize: buffer.byteLength,
       mimeType: "application/zip",
       archivePrefix,
-      evaluatorAssetsPresent: manifest.expected_files.some(({ relative_path }) =>
-        relative_path.includes("/ground_truth/") || relative_path.includes("/evidence_brief/"),
-      ),
+      evaluatorAssetsPresent: inventory.some(({ relativePath }) =>
+        relativePath.includes("/ground_truth/") || relativePath.includes("/evidence_brief/")),
     };
   } catch (error) {
     if (error instanceof DomainError) throw error;
