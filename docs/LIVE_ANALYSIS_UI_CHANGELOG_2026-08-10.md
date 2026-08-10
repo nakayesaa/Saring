@@ -29,3 +29,16 @@
 - `npm run lint`
 - `npm run build`
 - Full persisted workflow observed with 13 findings, 46 source locators, and no abstention for the synthetic benchmark package.
+
+## High-signal benchmark follow-up
+
+- Added Indonesian presentation for Price Engine v2 and Graph Engine v2 titles,
+  summaries, statuses, evidence labels, and comparison-method values.
+- Evidence Brief now derives deviation above Q90 directly from quoted price and Q90,
+  so previously persisted Engine v2 results no longer render a dash.
+- Price total difference is consistently rendered as
+  `(quoted price - Q90) * quantity`; it is explicitly a review value, not estimated
+  state loss.
+- Existing persisted results remain display-compatible while new engine results also
+  publish `relative_deviation_above_q90` directly.
+- Verification: `npm run typecheck` passed after this follow-up.

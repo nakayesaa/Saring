@@ -26,6 +26,14 @@ function priceQuantity(metrics: AnalysisModuleView["findings"][number]["metrics"
   return Math.round(exposure / (quoted - q90));
 }
 
+function priceExposureAboveQ90(metrics: AnalysisModuleView["findings"][number]["metrics"]) {
+  const quoted = metrics.quoted_or_hps_value;
+  const q90 = metrics.q90;
+  const quantity = priceQuantity(metrics);
+  if (typeof quoted !== "number" || typeof q90 !== "number" || quantity === null) return null;
+  return Math.max(0, quoted - q90) * quantity;
+}
+
 function percent(value: number | null) {
   return value === null ? "—" : `${Math.round(value * 100)}%`;
 }
@@ -109,10 +117,10 @@ export function AnalysisModuleDetail({
                         <div><dt className="text-xs font-bold text-[#647493]">Median pembanding (Q50)</dt><dd className="mt-1 font-mono font-black text-[#0b1b43]">{idr(finding.metrics.q50)}</dd></div>
                         <div><dt className="text-xs font-bold text-[#647493]">Batas atas pembanding (Q90)</dt><dd className="mt-1 font-mono font-black text-[#0b1b43]">{idr(finding.metrics.q90)}</dd></div>
                         <div><dt className="text-xs font-bold text-[#647493]">Jumlah pengadaan</dt><dd className="mt-1 font-mono font-black text-[#0b1b43]">{priceQuantity(finding.metrics)?.toLocaleString("id-ID") ?? "—"} unit</dd></div>
-                        <div><dt className="text-xs font-bold text-[#647493]">Selisih total untuk diverifikasi</dt><dd className="mt-1 font-mono font-black text-[#0b1b43]">{idr(finding.metrics.estimated_exposure_requiring_verification)}</dd></div>
+                        <div><dt className="text-xs font-bold text-[#647493]">Selisih total untuk diverifikasi</dt><dd className="mt-1 font-mono font-black text-[#0b1b43]">{idr(priceExposureAboveQ90(finding.metrics))}</dd></div>
                       </dl>
                       <p className="mt-3 text-xs leading-5 text-[#647493]">Kelompok pasar dibentuk dari {String(finding.metrics.comparator_count ?? "—")} harga pembanding dengan kategori dan konteks barang yang sama. Q50 adalah harga tengah; Q90 adalah batas yang hanya dilampaui sekitar 10% pembanding.</p>
-                      <p className="mt-2 rounded-md bg-white px-3 py-2 font-mono text-xs font-bold text-[#0b1b43]">({idr(finding.metrics.quoted_or_hps_value)} − {idr(finding.metrics.q90)}) × {priceQuantity(finding.metrics)?.toLocaleString("id-ID") ?? "—"} unit = {idr(finding.metrics.estimated_exposure_requiring_verification)}</p>
+                      <p className="mt-2 rounded-md bg-white px-3 py-2 font-mono text-xs font-bold text-[#0b1b43]">({idr(finding.metrics.quoted_or_hps_value)} − {idr(finding.metrics.q90)}) × {priceQuantity(finding.metrics)?.toLocaleString("id-ID") ?? "—"} unit = {idr(priceExposureAboveQ90(finding.metrics))}</p>
                       <p className="mt-2 text-xs leading-5 text-[#647493]">Nilai tersebut adalah selisih total terhadap Q90 untuk diverifikasi reviewer, bukan estimasi kerugian negara.</p>
                     </div>
                   )}

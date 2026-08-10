@@ -6,6 +6,12 @@ import type { AnalysisFindingView, AnalysisFindingsViewModel } from "@/lib/analy
 
 const engineLabels = { PRICE: "Harga", DOCUMENT: "Dokumen", GRAPH: "Relasi" } as const;
 const engineRoutes = { PRICE: "price", DOCUMENT: "documents", GRAPH: "network" } as const;
+const engineStatusLabels = {
+  SCORED: "Dapat dinilai",
+  LOW_CONFIDENCE: "Bukti pembanding terbatas",
+  ABSTAINED: "Data belum cukup",
+  NOT_APPLICABLE: "Tidak relevan",
+} as const;
 
 function percent(value: number | null) {
   return value === null ? "Tidak tersedia" : `${Math.round(value * 100)}%`;
@@ -13,6 +19,15 @@ function percent(value: number | null) {
 
 function metricLabel(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function metricValue(value: string | number | boolean | null) {
+  if (value === null) return "Tidak tersedia";
+  if (value === "EXACT") return "Pencocokan persis";
+  if (value === "NEAR") return "Kemiripan tinggi";
+  if (value === true) return "Ya";
+  if (value === false) return "Tidak";
+  return String(value);
 }
 
 function idr(value: unknown) {
@@ -26,19 +41,25 @@ function primaryFacts(finding: AnalysisFindingView, engine: keyof typeof engineL
     const exposure = finding.metrics.estimated_exposure_requiring_verification;
     const quantity = typeof finding.metrics.quantity === "number" ? finding.metrics.quantity :
       typeof quoted === "number" && typeof q90 === "number" && typeof exposure === "number" && quoted > q90 ? Math.round(exposure / (quoted - q90)) : null;
+    const deviation = typeof quoted === "number" && typeof q90 === "number" && q90 > 0
+      ? Math.max(0, (quoted - q90) / q90)
+      : null;
+    const q90Exposure = typeof quoted === "number" && typeof q90 === "number" && quantity !== null
+      ? Math.max(0, quoted - q90) * quantity
+      : null;
     return [
     ["Harga dievaluasi", idr(finding.metrics.quoted_or_hps_value)],
     ["Batas pembanding Q90", idr(finding.metrics.q90)],
     ["Jumlah pengadaan", quantity === null ? "—" : `${quantity.toLocaleString("id-ID")} unit`],
-    ["Deviasi di atas Q90", typeof finding.metrics.relative_deviation_above_q90 === "number" ? percent(finding.metrics.relative_deviation_above_q90) : "—"],
-    ["Selisih total untuk diverifikasi", idr(finding.metrics.estimated_exposure_requiring_verification)],
+    ["Deviasi di atas Q90", percent(deviation)],
+    ["Selisih total untuk diverifikasi", idr(q90Exposure)],
     ];
   }
   if (engine === "DOCUMENT") return [
     ["Dokumen terkait", finding.subject_ids.join(" ↔ ") || "Lihat sumber"],
     ["Kemiripan ternormalisasi", typeof finding.metrics.normalized_similarity === "number" ? percent(finding.metrics.normalized_similarity) : "—"],
     ["Panjang passage substantif", String(finding.metrics.longest_substantive_run ?? "—")],
-    ["Metode pembandingan", String(finding.metrics.comparison_method ?? "—")],
+    ["Metode pembandingan", finding.metrics.comparison_method === "EXACT" ? "Pencocokan persis" : String(finding.metrics.comparison_method ?? "—")],
   ];
   return [
     ["Pasangan vendor", finding.subject_ids.join(" ↔ ") || "Lihat source locator"],
@@ -76,7 +97,7 @@ function FindingCard({ finding, engine }: { finding: AnalysisFindingView; engine
             {metrics.map(([label, value]) => (
             <div key={label}>
               <dt className="text-xs font-bold text-[#77869f]">{metricLabel(label)}</dt>
-              <dd className="mt-1 break-words font-mono text-sm font-black text-[#0b1b43]">{String(value)}</dd>
+              <dd className="mt-1 break-words font-mono text-sm font-black text-[#0b1b43]">{metricValue(value)}</dd>
             </div>
           ))}
           </dl>
@@ -137,7 +158,7 @@ export function ActualEvidenceBriefView({ analysis }: { analysis: AnalysisFindin
               {analysis.modules.map((module) => (
                 <Link href={`/packages/${analysis.package_id}/${engineRoutes[module.engine]}`} key={module.engine} className="rounded-lg border border-[#d7d9dd] p-4 transition hover:border-[#1450e6] hover:bg-[#f7f9ff]">
                   <p className="font-extrabold text-[#0b1b43]">{engineLabels[module.engine]}</p>
-                  <p className="mt-1 text-sm text-[#647493]">{module.findings.length} temuan · {module.status}</p>
+                  <p className="mt-1 text-sm text-[#647493]">{module.findings.length} temuan · {engineStatusLabels[module.status]}</p>
                   <p className="mt-3 font-mono text-xs text-[#526383]">{module.engine_version}{module.model_version ? ` · ${module.model_version}` : ""}</p>
                   <p className="mt-3 text-sm font-bold text-[#1450e6]">Buka detail dan visualisasi →</p>
                 </Link>

@@ -75,6 +75,18 @@ export type AnalysisFindingsViewModel = {
 const primaryEngines = ["PRICE", "DOCUMENT", "GRAPH"] as const;
 
 export const findingPresentation = {
+  PRICE_ABOVE_MARKET_RANGE: {
+    label: "Harga di atas rentang pasar",
+    description: "Harga yang diperiksa melampaui rentang pasar pembanding dan perlu diverifikasi terhadap ruang lingkup penawaran.",
+  },
+  PRICE_BELOW_MARKET_RANGE: {
+    label: "Harga di bawah rentang pasar",
+    description: "Harga yang diperiksa berada di bawah rentang pasar pembanding dan perlu diverifikasi terhadap kelengkapan penawaran.",
+  },
+  HPS_ABOVE_MARKET_RANGE: {
+    label: "HPS di atas rentang pasar",
+    description: "HPS melampaui rentang pasar pembanding dan perlu diperiksa dasar penyusunannya.",
+  },
   PRICE_ABOVE_UPPER_BOUND: {
     label: "Harga di atas batas pembanding",
     description: "Harga yang diperiksa berada di atas rentang kelompok barang sebanding dan perlu dikonfirmasi terhadap ruang lingkup penawaran.",
@@ -94,6 +106,8 @@ export const findingPresentation = {
 } as const;
 
 const translations: Record<string, string> = {
+  "The normalized target value falls outside the disclosed conditional price interval and requires human verification; this is not a fraud conclusion.": "Harga yang telah dinormalisasi berada di luar rentang pasar pembanding. Reviewer perlu memeriksa kesetaraan spesifikasi, layanan, pajak, dan syarat pengiriman; temuan ini bukan kesimpulan fraud.",
+  "This vendor pair co-participated more often than expected from each vendor's own activity within the same opportunity set. The FDR-controlled signal requires corroboration and is not a collusion conclusion.": "Pasangan vendor ini mengikuti tender bersama lebih sering daripada yang diperkirakan berdasarkan aktivitas masing-masing pada kelompok peluang yang sama. Sinyal yang telah dikendalikan terhadap temuan semu ini memerlukan bukti pendukung dan bukan kesimpulan kolusi.",
   "The evaluated unit price is above the empirical conditional range for its disclosed comparator cohort and requires human verification; it is not a fraud conclusion. This is a synthetic functional signal.": "Harga satuan berada di atas rentang empiris kelompok barang sebanding. Reviewer perlu memeriksa perbedaan spesifikasi, layanan, pajak, dan syarat pengiriman; sinyal ini bukan kesimpulan fraud.",
   "This vendor pair co-participated more often than the configured empirical reference percentile. The synthetic pattern requires corroboration and is not a collusion conclusion.": "Pasangan vendor ini mengikuti tender bersama lebih sering daripada ambang persentil historis yang digunakan. Pola tersebut perlu diperkuat dengan bukti lain dan bukan kesimpulan kolusi.",
   "The target includes a longer warranty or a service component absent from comparators.": "Penawaran dapat mencakup garansi lebih panjang atau layanan yang tidak terdapat pada data pembanding.",
@@ -115,6 +129,8 @@ const translations: Record<string, string> = {
   "Canonical item context": "Konteks barang canonical",
   "Rare shared text for reviewer verification": "Teks langka yang sama untuk diverifikasi reviewer",
   "Dated historical participation edge": "Riwayat partisipasi tender bertanggal",
+  "Eligible Indonesian comparator observation": "Data harga pembanding Indonesia yang memenuhi kriteria",
+  "Canonical price target": "Harga penawaran yang dianalisis",
 };
 
 export function translateAnalysisText(value: string) {
@@ -128,6 +144,8 @@ export function translateAnalysisText(value: string) {
   if (/^Synthetic benchmark: found \d+ price position signal/.test(value)) return "Ditemukan posisi harga di atas kelompok pembanding yang memerlukan verifikasi ruang lingkup dan kewajaran harga.";
   if (/^Synthetic benchmark: found \d+ repeated co-bidding outlier/.test(value)) return "Ditemukan pola partisipasi bersama berulang yang melampaui ambang historis pembanding dan memerlukan pemeriksaan lanjutan.";
   if (/^Found \d+ rare cross-vendor text overlap signal/.test(value)) return "Ditemukan kemiripan teks non-template lintas vendor yang perlu diverifikasi asal dokumennya.";
+  if (/^Scored \d+ target\(s\) against normalized Indonesian price observations; \d+ review signal\(s\) were published\.$/.test(value)) return "Penawaran telah dibandingkan dengan data harga Indonesia yang dinormalisasi; posisi harga di luar rentang pasar diterbitkan untuk pemeriksaan reviewer.";
+  if (/^Screened \d+ vendor pair\(s\) across \d+ controlled historical package\(s\); published \d+ activity-normalized co-bidding signal\(s\)\.$/.test(value)) return "Pasangan vendor telah diperiksa pada paket historis yang sebanding; pola partisipasi bersama yang tidak lazim diterbitkan untuk pemeriksaan reviewer.";
   return value;
 }
 
