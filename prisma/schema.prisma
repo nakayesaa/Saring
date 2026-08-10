@@ -207,6 +207,12 @@ enum AnalysisEventStatus {
   FAILED
 }
 
+enum AnalysisAuxiliaryInputKind {
+  PRICE_ENGINE_INPUT
+  PRICE_OBSERVATION_SNAPSHOT
+  GRAPH_ENGINE_INPUT
+}
+
 enum EngineResultStatus {
   SCORED
   LOW_CONFIDENCE
@@ -644,10 +650,30 @@ model AnalysisJob {
   progressEvents    AnalysisProgressEvent[]
   artifacts         AnalysisArtifact[]
   results           EngineResult[]
+  auxiliaryInputs   AnalysisAuxiliaryInput[]
 
   @@unique([organizationId, idempotencyKey])
   @@index([organizationId, status, availableAt])
   @@index([packageId, createdAt])
+}
+
+model AnalysisAuxiliaryInput {
+  id            String                     @id @default(uuid()) @db.Uuid
+  jobId         String                     @db.Uuid
+  kind          AnalysisAuxiliaryInputKind
+  engine        AnalysisEngine
+  snapshotId    String
+  objectKey     String                     @unique
+  sha256        String
+  byteSize      BigInt
+  schemaVersion String
+  mimeType      String                     @default("application/json")
+  createdAt     DateTime                   @default(now())
+
+  job AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, kind])
+  @@index([jobId, engine])
 }
 
 model AnalysisArtifact {

@@ -67,6 +67,7 @@ export async function claimAnalysisJob(workerId: string) {
       },
       include: {
         package: { select: { sourceId: true, analysisCutoffAt: true } },
+        auxiliaryInputs: { orderBy: { kind: "asc" } },
       },
     });
   });
@@ -104,6 +105,64 @@ export async function claimAnalysisJob(workerId: string) {
     throw new Error("Unable to sign the canonical analysis snapshot.");
   }
 
+  const auxiliaryContract = {
+    PRICE_ENGINE_INPUT: {
+      engine: "PRICE",
+      schemaVersion: "saring-price-engine-input-1.0.0",
+    },
+    PRICE_OBSERVATION_SNAPSHOT: {
+      engine: "PRICE",
+      schemaVersion: "saring-price-observation-snapshot-1.0.0",
+    },
+    GRAPH_ENGINE_INPUT: {
+      engine: "GRAPH",
+      schemaVersion: "saring-graph-engine-input-1.0.0",
+    },
+  } as const;
+  let auxiliaryInputs;
+  try {
+    auxiliaryInputs = await Promise.all(claimed.auxiliaryInputs.map(async (input) => {
+      const expected = auxiliaryContract[input.kind];
+      if (
+        input.engine !== expected.engine ||
+        input.schemaVersion !== expected.schemaVersion ||
+        input.mimeType !== "application/json" ||
+        !claimed.requestedEngines.includes(input.engine)
+      ) {
+        throw new Error(`Auxiliary input ${input.kind} has invalid metadata.`);
+      }
+      const signed = await createSupabaseAdminClient().storage
+        .from(BUCKET)
+        .createSignedUrl(input.objectKey, SNAPSHOT_URL_TTL_SECONDS);
+      if (signed.error || !signed.data) {
+        throw new Error(`Unable to sign auxiliary input ${input.kind}.`);
+      }
+      return {
+        kind: input.kind,
+        engine: input.engine,
+        download_url: signed.data.signedUrl,
+        expires_at: new Date(now.getTime() + SNAPSHOT_URL_TTL_SECONDS * 1000).toISOString(),
+        sha256: input.sha256.toLowerCase(),
+        size_bytes: Number(input.byteSize),
+        schema_version: input.schemaVersion,
+        media_type: "application/json" as const,
+      };
+    }));
+  } catch (auxiliaryError) {
+    await getPrismaClient().analysisJob.updateMany({
+      where: { id: claimed.id, status: "CLAIMED", leaseTokenHash: leaseToken.hash },
+      data: {
+        status: "QUEUED",
+        stage: "QUEUED",
+        attempt: { decrement: 1 },
+        lease: Prisma.DbNull,
+        leaseTokenHash: null,
+        startedAt: null,
+      },
+    });
+    throw auxiliaryError;
+  }
+
   return validateAnalysisClaimResponse({
     schema_version: ANALYSIS_CLAIM_CONTRACT,
     job: {
@@ -132,6 +191,7 @@ export async function claimAnalysisJob(workerId: string) {
       schema_version: CANONICAL_ANALYSIS_INPUT_CONTRACT,
       media_type: "application/json",
     },
+    auxiliary_inputs: auxiliaryInputs,
     expected_artifacts: claimed.requestedEngines.map((engine) => ({
       kind: "ENGINE_RESULT" as const,
       engine,

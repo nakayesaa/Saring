@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/price-observation-snapshot.schema.json",
+  "title": "SARING Price Observation Snapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "snapshot_id", "created_at", "source_cutoff_at", "normalizer_version", "observations"],
+  "properties": {
+    "schema_version": { "const": "saring-price-observation-snapshot-1.0.0" },
+    "snapshot_id": { "$ref": "#/$defs/id" },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "source_cutoff_at": { "$ref": "#/$defs/timestamp" },
+    "normalizer_version": { "type": "string", "minLength": 1 },
+    "observations": { "type": "array", "minItems": 1, "items": { "$ref": "https://saring.local/contracts/v1/price-observation.schema.json" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

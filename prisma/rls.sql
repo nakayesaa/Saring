@@ -87,6 +87,21 @@ CREATE POLICY analysis_artifact_tenant ON "AnalysisArtifact"
       AND job."organizationId" = app.current_org_id()
   ));
 
+ALTER TABLE "AnalysisAuxiliaryInput" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AnalysisAuxiliaryInput" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS analysis_auxiliary_input_tenant ON "AnalysisAuxiliaryInput";
+CREATE POLICY analysis_auxiliary_input_tenant ON "AnalysisAuxiliaryInput"
+  USING (EXISTS (
+    SELECT 1 FROM "AnalysisJob" job
+    WHERE job.id = "AnalysisAuxiliaryInput"."jobId"
+      AND job."organizationId" = app.current_org_id()
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM "AnalysisJob" job
+    WHERE job.id = "AnalysisAuxiliaryInput"."jobId"
+      AND job."organizationId" = app.current_org_id()
+  ));
+
 ALTER TABLE "IngestionProgressEvent" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "IngestionProgressEvent" FORCE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS ingestion_progress_tenant ON "IngestionProgressEvent";

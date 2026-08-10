@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PriceEvidenceView } from "@/components/price-evidence-view";
+import { AnalysisModuleDetail } from "@/components/analysis-module-detail";
+import { buildGoldenAnalysisFindings, projectAnalysisFindings } from "@/lib/analysis-findings";
+import { getLatestAnalysisResults } from "@/lib/analysis/service";
+import { resolveWorkspacePrincipal } from "@/lib/auth/principal";
+import { requireWorkspaceSession } from "@/lib/auth/session";
+import { DomainError } from "@/lib/errors";
 import { getGoldenCase, goldenCase } from "@/lib/golden-case";
-import { buildPriceEvidenceViewModel } from "@/lib/price-evidence";
-import { getPriceEvidenceQuery } from "@/lib/price-engine/service";
 
 export const metadata: Metadata = { title: "Price Evidence" };
 
@@ -13,9 +16,25 @@ export function generateStaticParams() {
 
 export default async function PriceEvidencePage({ params }: { params: Promise<{ packageId: string }> }) {
   const { packageId } = await params;
-  const item = getGoldenCase(packageId);
-  if (!item) notFound();
-  const response = await getPriceEvidenceQuery().getByPackageId(packageId);
+  const principal = await resolveWorkspacePrincipal(await requireWorkspaceSession());
+  let analysis;
+  try {
+    analysis = projectAnalysisFindings(await getLatestAnalysisResults(principal, packageId));
+  } catch (error) {
+    const item = getGoldenCase(packageId);
+    if (!(error instanceof DomainError && error.code === "JOB_NOT_FOUND") || !item) notFound();
+    analysis = buildGoldenAnalysisFindings(item);
+  }
+  const engineModule = analysis.modules.find(({ engine }) => engine === "PRICE");
+  if (!engineModule) notFound();
 
-  return <PriceEvidenceView evidence={buildPriceEvidenceViewModel(response, item.name)} />;
+  return (
+    <AnalysisModuleDetail
+      packageId={analysis.package_id}
+      packageName={analysis.package_name}
+      title="Price Engine"
+      description="Tinjau posisi harga, batas pembanding, bukti, dan penjelasan alternatif. Sinyal ini bukan putusan fraud."
+      module={engineModule}
+    />
+  );
 }

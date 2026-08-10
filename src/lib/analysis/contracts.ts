@@ -18,7 +18,7 @@ export const requestedAnalysisEngines = [
   "DATA_QUALITY",
 ] as const satisfies readonly AnalysisEngine[];
 
-export const workerAnalysisEngines = ["DOCUMENT"] as const satisfies readonly AnalysisEngine[];
+export const workerAnalysisEngines = ["DOCUMENT", "PRICE", "GRAPH"] as const satisfies readonly AnalysisEngine[];
 
 export type AnalysisJobContract = {
   schema_version: typeof ANALYSIS_JOB_CONTRACT;

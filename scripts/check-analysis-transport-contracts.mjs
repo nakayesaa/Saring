@@ -30,6 +30,7 @@ const schemaId = (name, fragment = "") =>
   `https://saring.local/contracts/${name === "analysis-job-claim-response" ? "v2" : "v1"}/${name}.schema.json${fragment}`;
 const cases = [
   ["analysis-job-claim-response", "", "positive-claim-response", true],
+  ["analysis-job-claim-response", "", "positive-claim-with-auxiliary", true],
   ["analysis-job-claim-response", "", "invalid-claim-response", false],
   ["analysis-worker-progress-event", "", "positive-progress-event", true],
   ["analysis-worker-progress-event", "", "invalid-progress-event", false],
