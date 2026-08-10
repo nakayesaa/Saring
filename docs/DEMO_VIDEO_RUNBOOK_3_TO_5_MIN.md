@@ -44,7 +44,7 @@ Video memperlihatkan produk yang benar-benar berjalan. Bagian bisnis mendapat 65
 
 **Narasi:**
 
-> Dalam satu analysis run, tiga engine menghasilkan temuan yang dikonsolidasikan pada halaman ini. Reviewer dapat melihat prioritas paket, jumlah sinyal, sumber bukti, dan apakah ada engine yang abstain. Kekuatan pola dipisahkan dari kecukupan bukti agar angka yang tinggi tidak keliru dibaca sebagai probabilitas bersalah.
+> Dalam satu analysis run, tiga engine menghasilkan temuan yang dikonsolidasikan pada halaman ini. Indeks prioritas dihitung dengan confidence-aware evidence fusion: kontribusi tiap engine disesuaikan dengan kecukupan bukti dan mendapat bonus hanya ketika beberapa engine saling menguatkan. Kekuatan pola tetap dipisahkan dari confidence agar angka tinggi tidak keliru dibaca sebagai probabilitas bersalah.
 
 ### 02:00–02:35 — Price Engine
 
@@ -60,7 +60,7 @@ Video memperlihatkan produk yang benar-benar berjalan. Bagian bisnis mendapat 65
 
 **Narasi:**
 
-> Document Engine membandingkan bagian non-template antarpenawaran. Pada pasangan ini, passage dan kesalahan penulisan yang tidak lazim muncul pada dua dokumen vendor. Reviewer tidak hanya menerima skor: SARING menyimpan kutipan, nomor halaman, bounding box, dan source locator. Kemungkinan sah seperti konsultan atau materi produsen yang sama tetap ditampilkan sebagai penjelasan alternatif.
+> Document Engine memakai fingerprint exact, jalur tahan-noise OCR, serta retrieval MinHash dan Jaccard setelah redaksi template umum dikeluarkan. Pada pasangan ini, passage dan kesalahan penulisan yang tidak lazim muncul pada dua dokumen vendor. Reviewer tidak hanya menerima skor: SARING menyimpan kutipan, nomor halaman, bounding box, dan source locator. Kemungkinan sah seperti konsultan atau materi produsen yang sama tetap ditampilkan sebagai penjelasan alternatif.
 
 ### 03:10–03:45 — Graph Engine
 

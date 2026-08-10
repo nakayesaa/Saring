@@ -59,6 +59,10 @@ export function AnalysisFindingsOverview({ analysis }: { analysis: AnalysisFindi
 
           <dl className="flex flex-wrap gap-x-8 gap-y-2 border-t border-[#263a69] px-5 py-3 text-sm sm:px-7">
             <div className="flex items-baseline gap-2.5">
+              <dt className="font-bold text-[#afbdd7]">Indeks prioritas</dt>
+              <dd className="font-mono text-base font-black text-white">{analysis.fusion.review_priority_index}/100</dd>
+            </div>
+            <div className="flex items-baseline gap-2.5">
               <dt className="font-bold text-[#afbdd7]">Temuan</dt>
               <dd className="font-mono text-base font-black text-white">{analysis.finding_count}</dd>
             </div>
@@ -75,6 +79,21 @@ export function AnalysisFindingsOverview({ analysis }: { analysis: AnalysisFindi
               <dd className="font-mono text-base font-black text-white">{analysis.analysis_cutoff_at}</dd>
             </div>
           </dl>
+        </section>
+
+        <section className="mt-5 rounded-xl border border-[#c9cdd4] bg-white px-5 py-4 sm:px-7" aria-label="Konvergensi bukti lintas mesin">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-extrabold text-[#0b1b43]">Konvergensi bukti lintas mesin</h2>
+              <p className="mt-1 text-sm font-medium text-[#647493]">
+                {analysis.fusion.corroborating_module_count} dari {analysis.fusion.available_module_count} mesin memberikan sinyal yang saling mendukung. Bobot telah disesuaikan dengan kecukupan bukti.
+              </p>
+            </div>
+            <dl className="flex gap-7 text-sm">
+              <div><dt className="font-bold text-[#77869f]">Confidence fusion</dt><dd className="mt-1 font-mono text-lg font-black text-[#0b1b43]">{percent(analysis.fusion.evidence_confidence)}</dd></div>
+              <div><dt className="font-bold text-[#77869f]">Pendorong utama</dt><dd className="mt-1 font-mono text-lg font-black text-[#0b1b43]">{analysis.fusion.dominant_module ?? "—"}</dd></div>
+            </dl>
+          </div>
         </section>
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

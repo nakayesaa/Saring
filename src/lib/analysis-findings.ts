@@ -68,6 +68,15 @@ export type AnalysisFindingsViewModel = {
   finding_count: number;
   source_citation_count: number;
   abstention_count: number;
+  fusion: {
+    model_version: "confidence-aware-evidence-fusion-1.0.0";
+    review_priority_index: number;
+    evidence_confidence: number;
+    available_module_count: number;
+    corroborating_module_count: number;
+    dominant_module: "PRICE" | "DOCUMENT" | "GRAPH" | null;
+    contributions: Record<"PRICE" | "DOCUMENT" | "GRAPH" | "CROSS_MODAL", number>;
+  };
   modules: AnalysisModuleView[];
   abstentions: AnalysisAbstentionView[];
 };
@@ -256,12 +265,13 @@ export function projectAnalysisFindings(input: {
       },
     }];
   });
-  const scores = modules.flatMap((module) => module.findings.map((finding) => finding.score ?? 0));
-  const highestScore = Math.max(0, ...scores);
   const findingCount = modules.reduce((total, module) => total + module.findings.length, 0);
+  const fusion = fuseModuleEvidence(modules);
   const reviewPriority = findingCount === 0
     ? abstentions.length ? "INSUFFICIENT_DATA" : "NO_SIGNIFICANT_ALERT"
-    : highestScore >= 0.7 ? "HIGH" : highestScore >= 0.4 ? "MEDIUM" : "LOW";
+    : fusion.review_priority_index >= 65 && fusion.corroborating_module_count >= 2
+      ? "HIGH"
+      : fusion.review_priority_index >= 40 ? "MEDIUM" : "LOW";
 
   return {
     projection_version: "saring-analysis-findings-ui-1.0.0",
@@ -278,8 +288,53 @@ export function projectAnalysisFindings(input: {
     finding_count: findingCount,
     source_citation_count: modules.reduce((total, module) => total + module.findings.reduce((sum, finding) => sum + finding.evidence_locators.length, 0), 0),
     abstention_count: abstentions.length,
+    fusion,
     modules,
     abstentions,
+  };
+}
+
+function fuseModuleEvidence(modules: AnalysisModuleView[]): AnalysisFindingsViewModel["fusion"] {
+  const policyWeights = { PRICE: 0.35, DOCUMENT: 0.35, GRAPH: 0.30 } as const;
+  const active = modules.filter((module) =>
+    module.status !== "ABSTAINED" && module.status !== "NOT_APPLICABLE" && module.score !== null,
+  );
+  const weighted = active.map((module) => {
+    const confidence = Math.max(0, Math.min(1, module.confidence ?? 0));
+    const severity = Math.max(0, Math.min(1, module.score ?? 0));
+    const effectiveWeight = policyWeights[module.engine] * (0.5 + 0.5 * confidence);
+    return { engine: module.engine, confidence, effectiveWeight, evidence: severity * effectiveWeight };
+  });
+  const denominator = weighted.reduce((sum, item) => sum + item.effectiveWeight, 0);
+  const baseScore = denominator
+    ? weighted.reduce((sum, item) => sum + item.evidence, 0) / denominator
+    : 0;
+  const corroborating = active.filter((module) =>
+    module.findings.length > 0 && (module.score ?? 0) >= 0.55,
+  ).length;
+  const corroborationBonus = corroborating >= 3 ? 0.18 : corroborating === 2 ? 0.10 : 0;
+  const contributions = {
+    PRICE: 0,
+    DOCUMENT: 0,
+    GRAPH: 0,
+    CROSS_MODAL: corroborationBonus,
+  };
+  for (const item of weighted) contributions[item.engine] = denominator ? item.evidence / denominator : 0;
+  const dominant = weighted.length
+    ? weighted.reduce((best, item) => item.evidence > best.evidence ? item : best).engine
+    : null;
+  const meanConfidence = weighted.length
+    ? weighted.reduce((sum, item) => sum + item.confidence, 0) / weighted.length
+    : 0;
+  const coverageFactor = 0.6 + 0.4 * active.length / 3;
+  return {
+    model_version: "confidence-aware-evidence-fusion-1.0.0",
+    review_priority_index: Math.round(Math.min(1, baseScore + corroborationBonus) * 100),
+    evidence_confidence: Math.round(meanConfidence * coverageFactor * 100) / 100,
+    available_module_count: active.length,
+    corroborating_module_count: corroborating,
+    dominant_module: dominant,
+    contributions,
   };
 }
 
@@ -409,6 +464,7 @@ export function buildGoldenAnalysisFindings(item: GoldenCase): AnalysisFindingsV
     finding_count: modules.reduce((total, module) => total + module.findings.length, 0),
     source_citation_count: item.findings.reduce((total, finding) => total + finding.citations.length, 0),
     abstention_count: abstentions.length,
+    fusion: fuseModuleEvidence(modules),
     modules,
     abstentions,
   };
