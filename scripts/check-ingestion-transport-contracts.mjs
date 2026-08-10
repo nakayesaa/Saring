@@ -6,6 +6,7 @@ import addFormats from "ajv-formats";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const schemaNames = [
+  "runtime-bundle-manifest",
   "ingestion-job-claim-response",
   "ingestion-progress-event",
   "ingestion-artifact-prepare",
@@ -29,6 +30,8 @@ for (const name of schemaNames) {
 }
 
 const cases = [
+  ["runtime-bundle-manifest", "positive-runtime-bundle-manifest", true],
+  ["runtime-bundle-manifest", "invalid-runtime-bundle-manifest", false],
   ["ingestion-job-claim-response", "positive-claim-response", true],
   ["ingestion-job-claim-response", "positive-production-claim-response", true],
   ["ingestion-job-claim-response", "invalid-claim-response", false],

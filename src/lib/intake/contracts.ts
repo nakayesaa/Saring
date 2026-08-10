@@ -3,6 +3,7 @@ import "server-only";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 import manifestSchema from "../../../contracts/v1/package-bundle-manifest.schema.json";
+import runtimeManifestSchema from "../../../contracts/v1/runtime-bundle-manifest.schema.json";
 import ingestionJobSchema from "../../../contracts/v1/ingestion-job.schema.json";
 import claimResponseSchema from "../../../contracts/v1/ingestion-job-claim-response.schema.json";
 import progressEventSchema from "../../../contracts/v1/ingestion-progress-event.schema.json";
@@ -159,6 +160,30 @@ export type PackageBundleManifest = {
   expected_files: Array<{ relative_path: string; size_bytes: number; sha256: string }>;
 };
 
+export type RuntimeBundleFile = {
+  file_id: string;
+  path: string;
+  sha256: string;
+  size_bytes: number;
+  mime_type: string;
+  role: "RUNTIME_EVIDENCE" | "CALIBRATION" | "EVALUATOR_ONLY" | "EXPECTED_OUTPUT" | "OPERATIONAL";
+  analysis_eligible: boolean;
+  effective_at: string | null;
+  document_id: string | null;
+  vendor_id: string | null;
+  document_type: string | null;
+};
+
+export type RuntimeBundleManifest = {
+  schema_version: typeof RUNTIME_BUNDLE_CONTRACT;
+  bundle_id: string;
+  package_id: string;
+  analysis_cutoff_at: string;
+  bundle_mode: "LIVE_AUTHORIZED" | "RETROSPECTIVE" | "SYNTHETIC";
+  created_at: string;
+  files: RuntimeBundleFile[];
+};
+
 export type IngestionJobContract = {
   schema_version: typeof INGESTION_JOB_CONTRACT;
   job_id: string;
@@ -186,6 +211,7 @@ export type IngestionJobContract = {
 
 const ajv = addFormats(new Ajv2020({ allErrors: true, strict: true, strictRequired: false }));
 ajv.addSchema(manifestSchema);
+ajv.addSchema(runtimeManifestSchema);
 ajv.addSchema(ingestionJobSchema);
 ajv.addSchema(claimResponseSchema);
 ajv.addSchema(progressEventSchema);
@@ -209,6 +235,10 @@ function parse<T>(schemaId: string, value: unknown, code: string): T {
 
 export function parsePackageBundleManifest(value: unknown) {
   return parse<PackageBundleManifest>(manifestSchema.$id, value, "INVALID_BUNDLE_MANIFEST");
+}
+
+export function parseRuntimeBundleManifest(value: unknown) {
+  return parse<RuntimeBundleManifest>(runtimeManifestSchema.$id, value, "INVALID_BUNDLE_MANIFEST");
 }
 
 export function parseIngestionJob(value: unknown) {

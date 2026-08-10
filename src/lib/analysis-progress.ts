@@ -83,7 +83,7 @@ export function sequenceAnalysisTimeline(
 
 export const primaryAnalysisEngines = [
   { key: "PRICE", number: "01", title: "Price intelligence", description: "Conditional price ranges, comparable cohorts, and explainable deviations." },
-  { key: "DOCUMENT", number: "02", title: "Document anomaly detection", description: "Non-template passage similarity, rare errors, and source-linked matches." },
+  { key: "DOCUMENT", number: "02", title: "Analisis bukti dokumen", description: "Kemiripan teks non-template, kontradiksi fakta lintas dokumen, dan locator sumber." },
   { key: "GRAPH", number: "03", title: "Relationship graph analysis", description: "Dated co-bidding, concentration, and transparent historical motifs." },
 ] as const satisfies readonly { key: AnalysisEngine; number: string; title: string; description: string }[];
 

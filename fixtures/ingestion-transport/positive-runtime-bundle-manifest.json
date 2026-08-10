@@ -1,0 +1,23 @@
+{
+  "schema_version": "saring-runtime-bundle-manifest-1.0.0",
+  "bundle_id": "PKG-RUNTIME-001",
+  "package_id": "PKG-RUNTIME-001",
+  "analysis_cutoff_at": "2026-05-02T03:00:00.000Z",
+  "bundle_mode": "SYNTHETIC",
+  "created_at": "2026-08-10T00:00:00.000Z",
+  "files": [
+    {
+      "file_id": "FILE-PKG-RUNTIME-001-001",
+      "path": "package_PKG-RUNTIME-001/package.json",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "size_bytes": 256,
+      "mime_type": "application/json",
+      "role": "RUNTIME_EVIDENCE",
+      "analysis_eligible": true,
+      "effective_at": null,
+      "document_id": null,
+      "vendor_id": null,
+      "document_type": "PACKAGE_METADATA"
+    }
+  ]
+}

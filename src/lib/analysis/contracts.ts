@@ -6,7 +6,7 @@ import type { EngineResult } from "@/lib/price-engine/contracts";
 
 export const ANALYSIS_JOB_CONTRACT = "saring-analysis-job-2.0.0";
 export const ENGINE_RESULT_CONTRACT = "saring-engine-result-2.0.0";
-export const ANALYSIS_PIPELINE_VERSION = "saring-analysis-pipeline-2.1.0";
+export const ANALYSIS_PIPELINE_VERSION = "saring-analysis-pipeline-2.2.0";
 export const CANONICAL_ANALYSIS_INPUT_CONTRACT = "saring-canonical-analysis-snapshot-1.0.0";
 
 export const requestedAnalysisEngines = [
