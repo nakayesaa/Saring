@@ -56,7 +56,7 @@ export function AnalysisModuleDetail({
   return (
     <div className="contents">
       <PageHeading title={title} description={description} />
-      <div className="shell-page-content">
+      <div data-demo-tour-engine={module.engine} className="shell-page-content">
         <Link
           href={`/packages/${packageId}/findings`}
           className="inline-flex items-center gap-2 text-sm font-bold text-[#647493] hover:text-[#1450e6]"

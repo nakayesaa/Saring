@@ -13,6 +13,7 @@ import { signOut } from "@/app/login/actions";
 import type { WorkspaceSession } from "@/lib/auth/session";
 import { SidebarNav } from "./sidebar-nav";
 import { SaringMark } from "./saring-mark";
+import { GuidedDemoTour } from "./guided-demo-tour";
 
 const compactShellQuery = "(max-width: 940px)";
 
@@ -111,6 +112,7 @@ export function AppShell({ session, children }: { session: WorkspaceSession; chi
         ) : null}
         <section className="shell-page fade-in">{children}</section>
       </main>
+      <GuidedDemoTour />
     </div>
   );
 }

@@ -9,6 +9,7 @@ export type OrganizationRole = (typeof organizationRoles)[number];
 export type Permission =
   | "package:view"
   | "package:manage"
+  | "package:delete"
   | "document:upload"
   | "finding:review"
   | "brief:approve"
@@ -19,6 +20,7 @@ const rolePermissions: Record<OrganizationRole, ReadonlySet<Permission>> = {
   ADMIN: new Set([
     "package:view",
     "package:manage",
+    "package:delete",
     "document:upload",
     "finding:review",
     "brief:approve",

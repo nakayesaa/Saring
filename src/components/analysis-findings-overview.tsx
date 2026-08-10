@@ -38,7 +38,7 @@ export function AnalysisFindingsOverview({ analysis }: { analysis: AnalysisFindi
         )}
       />
 
-      <div className="shell-page-content">
+      <div data-demo-tour="findings" className="shell-page-content">
         <section className="overflow-hidden rounded-xl bg-[#0b1b43] text-white">
           <div className="px-5 py-4 sm:px-7">
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-bold">

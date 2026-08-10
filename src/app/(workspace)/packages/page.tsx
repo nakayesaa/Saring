@@ -6,11 +6,12 @@ import { PrimaryActionLink } from "@/components/primary-action-link";
 import { resolveWorkspacePrincipal } from "@/lib/auth/principal";
 import { requireWorkspaceSession } from "@/lib/auth/session";
 import { listStoredPackages } from "@/lib/intake/library";
+import { hasPermission } from "@/lib/auth/permissions";
 
 export const metadata: Metadata = { title: "Packages" };
 
 export default async function PackagesPage() {
   const principal = await resolveWorkspacePrincipal(await requireWorkspaceSession());
   const packages = await listStoredPackages(principal);
-  return <><PageHeading eyebrow="Case management" title="Packages" description="Package yang tersimpan pada database workspace aktif." actions={<PrimaryActionLink href="/packages/new"><FolderPlus size={17} /> Add package</PrimaryActionLink>} /><div className="shell-page-content"><ActualPackagesDirectory packages={packages} /></div></>;
+  return <><PageHeading eyebrow="Case management" title="Packages" description="Package yang tersimpan pada database workspace aktif." actions={<PrimaryActionLink href="/packages/new"><FolderPlus size={17} /> Add package</PrimaryActionLink>} /><div className="shell-page-content"><ActualPackagesDirectory packages={packages} canDelete={hasPermission(principal.role, "package:delete")} /></div></>;
 }

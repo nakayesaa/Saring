@@ -136,7 +136,7 @@ export function ActualEvidenceBriefView({ analysis }: { analysis: AnalysisFindin
   return (
     <div className="contents">
       <PageHeading title="Evidence Brief" description="Laporan dinamis dari structured findings pada analysis run aktual." actions={<EvidenceBriefActions />} />
-      <div className="shell-page-content evidence-brief-print-root">
+      <div data-demo-tour="brief" className="shell-page-content evidence-brief-print-root">
         <Link href={`/packages/${analysis.package_id}/findings`} className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-[#647493] print:hidden">
           <ArrowLeft size={17} /> Kembali ke ringkasan temuan
         </Link>
