@@ -5,8 +5,6 @@ import { getLatestAnalysisJob } from "@/lib/analysis/service";
 import { resolveWorkspacePrincipal } from "@/lib/auth/principal";
 import { requireWorkspaceSession } from "@/lib/auth/session";
 import { DomainError } from "@/lib/errors";
-import { buildGoldenAnalysisProgress } from "@/lib/analysis-progress";
-import { getGoldenCase } from "@/lib/golden-case";
 
 export const metadata: Metadata = { title: "Run analysis" };
 
@@ -29,12 +27,8 @@ export default async function ProcessingPage({ params }: { params: Promise<{ pac
     };
     liveEndpoint = `/api/packages/${encodeURIComponent(packageId)}/analysis`;
   } catch (error) {
-    const item = getGoldenCase(packageId);
-    if (error instanceof DomainError && error.code === "JOB_NOT_FOUND" && item) {
-      analysis = buildGoldenAnalysisProgress({ packageId: item.id, packageName: item.name, analysisCutoffAt: item.analysisCutoffAt });
-    } else {
-      notFound();
-    }
+    if (error instanceof DomainError && error.code === "JOB_NOT_FOUND") notFound();
+    throw error;
   }
   return <AnalysisProcessing analysis={analysis} liveEndpoint={liveEndpoint} />;
 }

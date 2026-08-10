@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/graph-engine-api-request.schema.json",
+  "title": "SARING Graph Engine API Request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "input", "created_at"],
+  "properties": {
+    "schema_version": { "const": "saring-graph-engine-api-request-1.0.0" },
+    "input": { "$ref": "https://saring.local/contracts/v1/graph-engine-input.schema.json" },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

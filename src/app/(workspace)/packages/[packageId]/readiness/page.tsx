@@ -5,11 +5,9 @@ import { ArrowLeft } from "lucide-react";
 import { ExtractionReviewPanel } from "@/components/extraction-review-workspace";
 import { PageHeading } from "@/components/page-heading";
 import { ReadinessEngineList } from "@/components/readiness-engine-list";
-import { buildGoldenExtractionReview } from "@/lib/extraction-review";
 import { buildCanonicalExtractionReview } from "@/lib/extraction-review";
 import { buildAnalysisSnapshotExtractionReview } from "@/lib/extraction-review";
-import { getGoldenCase } from "@/lib/golden-case";
-import { buildCanonicalReadiness, buildGoldenReadiness } from "@/lib/readiness";
+import { buildCanonicalReadiness } from "@/lib/readiness";
 import { buildAnalysisSnapshotReadiness } from "@/lib/readiness";
 import { requireWorkspaceSession } from "@/lib/auth/session";
 import { resolveWorkspacePrincipal } from "@/lib/auth/principal";
@@ -40,10 +38,8 @@ export default async function ReadinessPage({ params }: { params: Promise<{ pack
       review = buildCanonicalExtractionReview(snapshot);
     }
   } catch (error) {
-    const item = getGoldenCase(packageId);
-    if (!(error instanceof DomainError && error.code === "PACKAGE_NOT_FOUND") || !item) notFound();
-    readiness = buildGoldenReadiness(item);
-    review = buildGoldenExtractionReview(item);
+    if (error instanceof DomainError && error.code === "PACKAGE_NOT_FOUND") notFound();
+    throw error;
   }
 
   return (

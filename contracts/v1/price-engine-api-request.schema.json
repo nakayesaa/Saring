@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saring.local/contracts/v1/price-engine-api-request.schema.json",
+  "title": "SARING Price Engine API Request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "input", "observation_snapshot", "created_at"],
+  "properties": {
+    "schema_version": { "const": "saring-price-engine-api-request-1.0.0" },
+    "input": { "$ref": "https://saring.local/contracts/v1/price-engine-input.schema.json" },
+    "observation_snapshot": { "$ref": "https://saring.local/contracts/v1/price-observation-snapshot.schema.json" },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

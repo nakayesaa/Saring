@@ -40,7 +40,7 @@ export function GraphNetworkPanel({ module }: { module: AnalysisModuleView }) {
   if (edges.length === 0) {
     return (
       <section className="mt-7 rounded-xl border border-[#c9cdd4] bg-white p-6">
-        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#647493]">Network view</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#647493]">Visualisasi jaringan</p>
         <h2 className="mt-2 text-xl font-extrabold text-[#0b1b43]">Belum ada edge yang layak divisualisasikan</h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4f5e77]">
           {module.summary} Visualisasi sengaja tidak membentuk hubungan tanpa finding lintas vendor yang diterbitkan engine.
@@ -57,7 +57,7 @@ export function GraphNetworkPanel({ module }: { module: AnalysisModuleView }) {
   return (
     <section className="mt-7 overflow-hidden rounded-xl border border-[#c9cdd4] bg-white">
       <div className="border-b border-[#e4e7ec] px-6 py-5">
-        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#647493]">Network view</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#647493]">Visualisasi jaringan</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-xl font-extrabold text-[#0b1b43]">Relasi partisipasi berulang</h2>
@@ -100,16 +100,16 @@ export function GraphNetworkPanel({ module }: { module: AnalysisModuleView }) {
         </div>
 
         <div className="border-t border-[#e4e7ec] p-5 lg:border-l lg:border-t-0">
-          <h3 className="text-sm font-extrabold text-[#0b1b43]">Edge evidence</h3>
+          <h3 className="text-sm font-extrabold text-[#0b1b43]">Bukti hubungan</h3>
           <div className="mt-3 space-y-3">
             {edges.map((edge) => (
               <article key={edge.id} className="rounded-lg bg-[#f6f7f9] p-4">
                 <p className="font-mono text-xs font-black text-[#1450e6]">{edge.source} ↔ {edge.target}</p>
                 <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
-                  <div><dt className="text-[#647493]">Co-bid</dt><dd className="mt-1 font-mono font-black text-[#17191d]">{edge.coBidCount ?? "—"}</dd></div>
-                  <div><dt className="text-[#647493]">Threshold</dt><dd className="mt-1 font-mono font-black text-[#17191d]">{edge.threshold ?? "—"}</dd></div>
-                  <div><dt className="text-[#647493]">Score</dt><dd className="mt-1 font-mono font-black text-[#17191d]">{Math.round(edge.score * 100)}%</dd></div>
-                  <div><dt className="text-[#647493]">Confidence</dt><dd className="mt-1 font-mono font-black text-[#17191d]">{Math.round(edge.confidence * 100)}%</dd></div>
+                  <div><dt className="text-[#647493]">Tender bersama</dt><dd className="mt-1 font-mono font-black text-[#17191d]">{edge.coBidCount ?? "—"}</dd></div>
+                  <div><dt className="text-[#647493]">Ambang historis</dt><dd className="mt-1 font-mono font-black text-[#17191d]">{edge.threshold ?? "—"}</dd></div>
+                  <div><dt className="text-[#647493]">Kekuatan pola</dt><dd className="mt-1 font-mono font-black text-[#17191d]">{Math.round(edge.score * 100)}%</dd></div>
+                  <div><dt className="text-[#647493]">Kecukupan bukti</dt><dd className="mt-1 font-mono font-black text-[#17191d]">{Math.round(edge.confidence * 100)}%</dd></div>
                 </dl>
               </article>
             ))}

@@ -78,3 +78,67 @@ decision recorded here. No remote push or destructive database mutation is autho
 - Stop before any destructive or bulk Supabase operation: always.
 - Current implementation priority: end-to-end execution, then EngineResult-backed graph
   visualization.
+
+### 4. Paper-aligned production baseline - complete
+
+- Replaced production Price decisions with `saring-price-engine-2.0.0`: strictly
+  comparable Indonesian cohorts, cutoff/provenance and commercial-basis gates, Tukey
+  1.5-IQR plus a 0.5x/2x median-ratio guard, and explicit review-only wording.
+- Replaced production Graph decisions with `saring-graph-engine-2.0.0`: controlled
+  category/method/region opportunity sets, activity-normalized lift, Jaccard similarity,
+  a one-sided binomial screen, and Benjamini-Hochberg FDR control.
+- Disabled the worker's legacy synthetic Price/Graph fallback. Missing production
+  auxiliary snapshots now yield `ABSTAINED`, not a demo-generated risk finding.
+- Updated the Price and Graph rule specifications with active versus deferred rules and
+  the paper-backed interpretation boundary. These engines identify review signals; they
+  do not classify a vendor as fraudulent.
+- Verification: Ruff passed; the complete Python suite passed 71/71 using a
+  workspace-local pytest temporary directory.
+
+### 5. Remote deployment paradigm - complete locally
+
+- Added independent authenticated FastAPI services for Price and Graph, each exposing
+  `/healthz` and contract-validated `POST /v1/analyze`.
+- The analysis worker now calls configured `PRICE_ENGINE_URL` and `GRAPH_ENGINE_URL`
+  using a separate bearer credential. Production worker code no longer imports or runs
+  either analytical core directly.
+- Added versioned API request schemas to both repositories and made each service reject
+  an undeployed requested engine version.
+- Added Hugging Face Docker Space templates for each engine: port 7860, UID 1000,
+  pinned dependencies, distinct ASGI entrypoints, and a safe PowerShell exporter that
+  creates self-contained Space repositories.
+- Reserved `Authorization: Bearer <HF_SPACE_TOKEN>` for Hugging Face private/protected
+  Space access and moved application authentication to `X-Saring-Engine-Token`, avoiding
+  credential-header collision.
+- Added the normative 2021-2026 paper registry. Older research notes are explicitly
+  non-normative for v2.
+- Verified both services simultaneously on ports 7861/7862 and obtained `SCORED`
+  responses through the real HTTP client for Price and Graph. Ruff passed and the full
+  Python suite passed 75/75.
+- Docker CLI is unavailable on this machine, so no local Docker image-build claim is
+  made. Both generated Hugging Face Space contexts passed structural verification.
+
+### 6. Synthetic benchmark policy correction - complete
+
+- Corrected an overly restrictive implementation decision: synthetic provenance no
+  longer causes Price or Graph to abstain. Synthetic inputs are analyzed with the same
+  paper-grounded rules and disclosed through `metrics.synthetic_input=true`.
+- The restriction now applies only to external-validity claims: synthetic data cannot
+  establish Indonesian precision, recall, prevalence, or a legal fraud conclusion.
+- Added a deterministic canonical-snapshot adapter for synthetic uploaded bundles. It
+  constructs versioned Price/observation and Graph opportunity inputs without reading
+  evaluator labels, so auxiliary JSON does not need to be registered manually for the
+  checked-in golden bundle.
+- Added a second Graph pattern for high-coherence repeated co-bidding. It preserves the
+  activity-normalized FDR screen while allowing a clearly disclosed high-coherence
+  signal when frequent actors make independent-lift alone uninformative.
+- Golden HTTP smoke result: Price `SCORED` with 9 findings; Graph `SCORED` with one
+  `SYN-V007`/`SYN-V011` finding.
+- Ruff passed and the complete Python suite passed 77/77.
+# UI provenance cleanup (2026-08-10)
+
+- Evidence Brief now projects the latest persisted analysis results for the requested package; the `AR-2026-001` golden brief is no longer reachable from the workspace route.
+- Removed golden-result fallbacks from findings, Price, Graph, processing, and readiness routes. Missing/incomplete runs now remain unavailable instead of silently showing demo output.
+- Packages and Review queue now query persisted workspace packages.
+- Global Documents, Vendors & actors, and Relationship graph fixtures were disabled; these pages explicitly direct reviewers to package-scoped actual evidence until aggregate repositories are implemented.
+- Verification: `npm run typecheck`, `npm run lint`, and `npm run build` passed.

@@ -106,11 +106,11 @@ export function AnalysisFindingsOverview({ analysis }: { analysis: AnalysisFindi
 
                   <dl className="grid grid-cols-2 gap-5 lg:gap-7">
                     <div>
-                      <dt className="text-xs font-bold text-[#77869f]">Score</dt>
+                      <dt className="text-xs font-bold text-[#77869f]">Kekuatan pola</dt>
                       <dd className="mt-1 font-mono text-xl font-black tracking-[-0.03em] text-[#0b1b43]">{percent(module.score)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-bold text-[#77869f]">Confidence</dt>
+                      <dt className="text-xs font-bold text-[#77869f]">Kecukupan bukti</dt>
                       <dd className="mt-1 font-mono text-xl font-black tracking-[-0.03em] text-[#0b1b43]">{percent(module.confidence)}</dd>
                     </div>
                   </dl>

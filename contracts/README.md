@@ -28,6 +28,8 @@ contracts; the `*.schema.json` files define them.
 | Price Engine input | `saring-price-engine-input-1.0.0` | Canonical participant-item targets sent to Price Engine |
 | Price Engine detail | `saring-price-engine-detail-1.0.0` | Auditable result for one participant-item quote |
 | Price Engine output | `saring-price-engine-output-1.0.0` | Batch output returned by the Python boundary |
+| Price Engine API request | `saring-price-engine-api-request-1.0.0` | Authenticated remote Price service request |
+| Graph Engine API request | `saring-graph-engine-api-request-1.0.0` | Authenticated remote Graph service request |
 | Price Evidence response | `saring-price-evidence-response-1.0.0` | Shared result plus Price details consumed by web/PDF |
 | Analysis job v2 | `saring-analysis-job-2.0.0` | Immutable canonical-snapshot analysis request and worker lifecycle |
 | Engine result v2 | `saring-engine-result-2.0.0` | Production output from one requested analysis engine |

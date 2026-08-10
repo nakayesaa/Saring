@@ -75,6 +75,14 @@ export type AnalysisFindingsViewModel = {
 const primaryEngines = ["PRICE", "DOCUMENT", "GRAPH"] as const;
 
 export const findingPresentation = {
+  PRICE_ABOVE_UPPER_BOUND: {
+    label: "Harga di atas batas pembanding",
+    description: "Harga yang diperiksa berada di atas rentang kelompok barang sebanding dan perlu dikonfirmasi terhadap ruang lingkup penawaran.",
+  },
+  REPEATED_CO_BIDDING: {
+    label: "Partisipasi bersama berulang",
+    description: "Pasangan vendor muncul bersama lebih sering daripada ambang pola historis pembanding.",
+  },
   CROSS_DOCUMENT_FACT_CONTRADICTION: {
     label: "Kontradiksi fakta lintas dokumen",
     description: "Dua dokumen vendor memuat nilai yang tidak konsisten dan perlu dibandingkan oleh reviewer.",
@@ -84,6 +92,44 @@ export const findingPresentation = {
     description: "Passage non-template yang serupa ditemukan pada dokumen berbeda dan perlu ditelusuri ke sumbernya.",
   },
 } as const;
+
+const translations: Record<string, string> = {
+  "The evaluated unit price is above the empirical conditional range for its disclosed comparator cohort and requires human verification; it is not a fraud conclusion. This is a synthetic functional signal.": "Harga satuan berada di atas rentang empiris kelompok barang sebanding. Reviewer perlu memeriksa perbedaan spesifikasi, layanan, pajak, dan syarat pengiriman; sinyal ini bukan kesimpulan fraud.",
+  "This vendor pair co-participated more often than the configured empirical reference percentile. The synthetic pattern requires corroboration and is not a collusion conclusion.": "Pasangan vendor ini mengikuti tender bersama lebih sering daripada ambang persentil historis yang digunakan. Pola tersebut perlu diperkuat dengan bukti lain dan bukan kesimpulan kolusi.",
+  "The target includes a longer warranty or a service component absent from comparators.": "Penawaran dapat mencakup garansi lebih panjang atau layanan yang tidak terdapat pada data pembanding.",
+  "Tax, shipping, installation, or delivery terms may not be fully reconciled.": "Pajak, pengiriman, instalasi, atau syarat serah terima mungkin belum sepenuhnya disetarakan.",
+  "The target specification may contain a higher-quality component not represented in canonical fields.": "Spesifikasi dapat memuat komponen dengan mutu lebih tinggi yang belum tercatat pada field canonical.",
+  "The comparator cohort may not reflect a recent regional market shift.": "Kelompok pembanding mungkin belum menangkap perubahan harga pasar regional terbaru.",
+  "A low quote may reflect a promotion, different unit basis, omitted scope, or non-comparable specification.": "Perbedaan harga dapat disebabkan promosi, basis satuan berbeda, ruang lingkup yang tidak lengkap, atau spesifikasi yang tidak benar-benar sebanding.",
+  "A small or specialized market can make repeated co-bidding normal.": "Pasar yang kecil atau khusus dapat membuat vendor yang sama sering mengikuti tender bersama secara wajar.",
+  "Geographic coverage, product authorization, or qualification rules may limit suppliers.": "Cakupan wilayah, otorisasi produk, atau persyaratan kualifikasi dapat membatasi jumlah pemasok.",
+  "The available history may omit tenders where only one member of the pair participated.": "Riwayat yang tersedia mungkin belum mencakup tender ketika hanya salah satu vendor berpartisipasi.",
+  "Common participation does not establish communication or coordinated bidding.": "Partisipasi bersama tidak membuktikan komunikasi ataupun koordinasi penawaran.",
+  "Shared consultant or document preparer.": "Kedua vendor mungkin menggunakan konsultan atau penyusun dokumen yang sama.",
+  "Legitimate manufacturer or distributor material.": "Teks dapat berasal dari materi resmi produsen atau distributor yang sama.",
+  "Required or customary wording not captured by the template profile.": "Teks dapat merupakan redaksi wajib atau lazim yang belum tercakup dalam profil template.",
+  "Extraction or OCR artifact.": "Kemiripan dapat dipengaruhi kesalahan ekstraksi atau OCR.",
+  "Coincidence in a small technical vocabulary.": "Kemiripan dapat terjadi karena kosakata teknis yang terbatas.",
+  "Price value under review": "Harga yang diperiksa",
+  "Cutoff-safe comparator cohort": "Kelompok pembanding sebelum cutoff",
+  "Canonical item context": "Konteks barang canonical",
+  "Rare shared text for reviewer verification": "Teks langka yang sama untuk diverifikasi reviewer",
+  "Dated historical participation edge": "Riwayat partisipasi tender bertanggal",
+};
+
+export function translateAnalysisText(value: string) {
+  const translated = translations[value];
+  if (translated) return translated;
+  const participation = value.match(/^(\S+) participated in (\S+) on (\d{4}-\d{2}-\d{2})$/);
+  if (participation) return `${participation[1]} berpartisipasi dalam ${participation[2]} pada ${participation[3]}`;
+  const evaluatedValue = value.match(/^Evaluated value: ([\d.]+)$/);
+  if (evaluatedValue) return `Harga yang dievaluasi: ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(evaluatedValue[1]))}`;
+  if (value.startsWith("Comparator IDs:")) return value.replace("Comparator IDs:", "ID data pembanding:");
+  if (/^Synthetic benchmark: found \d+ price position signal/.test(value)) return "Ditemukan posisi harga di atas kelompok pembanding yang memerlukan verifikasi ruang lingkup dan kewajaran harga.";
+  if (/^Synthetic benchmark: found \d+ repeated co-bidding outlier/.test(value)) return "Ditemukan pola partisipasi bersama berulang yang melampaui ambang historis pembanding dan memerlukan pemeriksaan lanjutan.";
+  if (/^Found \d+ rare cross-vendor text overlap signal/.test(value)) return "Ditemukan kemiripan teks non-template lintas vendor yang perlu diverifikasi asal dokumennya.";
+  return value;
+}
 
 export function readableFindingType(value: string) {
   const presentation = findingPresentation[value as keyof typeof findingPresentation];
@@ -97,10 +143,10 @@ function projectLocator(locator: GeneralEngineResult["evidence_locators"][number
   return {
     locator_id: locator.locator_id,
     source_type: locator.source_type,
-    label: locator.label ?? readableFindingType(locator.source_type),
+    label: translateAnalysisText(locator.label ?? readableFindingType(locator.source_type)),
     source: locatorSource(locator),
     locator: locatorPosition(locator),
-    excerpt: locator.excerpt ?? "Buka sumber yang dirujuk untuk memverifikasi temuan ini.",
+    excerpt: translateAnalysisText(locator.excerpt ?? "Buka sumber yang dirujuk untuk memverifikasi temuan ini."),
     document_id: locator.document_id ?? null,
     page_number: locator.page_number ?? null,
     bbox: locator.bbox ?? null,
@@ -120,11 +166,16 @@ function locatorPosition(locator: GeneralEngineResult["evidence_locators"][numbe
 }
 
 function displayMetric(metrics: Record<string, string | number | boolean | null> | undefined) {
-  if (!metrics) return "Evidence-linked signal";
+  if (!metrics) return "Sinyal berbasis bukti";
+  if (typeof metrics.quoted_or_hps_value === "number" && typeof metrics.q90 === "number") {
+    return `${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(metrics.quoted_or_hps_value)} vs Q90 ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(metrics.q90)}`;
+  }
+  if (typeof metrics.co_bid_count === "number") return `${metrics.co_bid_count} tender bersama`;
+  if (typeof metrics.normalized_similarity === "number") return `${Math.round(metrics.normalized_similarity * 100)}% kemiripan`;
   const preferred = metrics.display_metric;
   if (typeof preferred === "string" || typeof preferred === "number") return String(preferred);
   const entry = Object.entries(metrics).find(([, value]) => value !== null);
-  return entry ? `${readableFindingType(entry[0])}: ${String(entry[1])}` : "Evidence-linked signal";
+  return entry ? `${readableFindingType(entry[0])}: ${String(entry[1])}` : "Sinyal berbasis bukti";
 }
 
 export function projectAnalysisFindings(input: {
@@ -146,7 +197,7 @@ export function projectAnalysisFindings(input: {
       status: result?.status ?? "NOT_APPLICABLE",
       score: result?.score ?? null,
       confidence: result?.confidence ?? null,
-      summary: result?.summary ?? "No result was returned for this engine.",
+      summary: translateAnalysisText(result?.summary ?? "Mesin tidak mengembalikan hasil."),
       findings: (result?.findings ?? []).map((finding) => ({
         finding_id: finding.finding_id,
         finding_type: finding.finding_type,
@@ -155,7 +206,7 @@ export function projectAnalysisFindings(input: {
         score: finding.score,
         confidence: finding.confidence,
         title: readableFindingType(finding.finding_type),
-        summary: finding.summary,
+        summary: translateAnalysisText(finding.summary),
         metric: displayMetric(finding.metrics),
         metrics: finding.metrics ?? {},
         evidence_locator_ids: finding.evidence_locator_ids,
@@ -163,7 +214,7 @@ export function projectAnalysisFindings(input: {
           const locator = locators.get(id);
           return locator ? [projectLocator(locator)] : [];
         }),
-        alternative_explanations: finding.alternative_explanations,
+        alternative_explanations: finding.alternative_explanations.map(translateAnalysisText),
       })),
     };
   });

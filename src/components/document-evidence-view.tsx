@@ -60,11 +60,11 @@ function EvidenceRegion({ evidence, index }: { evidence: AnalysisEvidenceLocator
 
       <dl className="mt-5 grid gap-3 border-t border-[#e1e3e7] pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
         <div className="min-w-0">
-          <dt className="text-xs font-bold text-[#77869f]">PDF bounding box</dt>
+          <dt className="text-xs font-bold text-[#77869f]">Koordinat kutipan pada PDF</dt>
           <dd className="mt-1 break-all font-mono text-sm font-black text-[#0b1b43]">{bboxLabel(evidence.bbox)}</dd>
         </div>
         <div className="min-w-0">
-          <dt className="text-xs font-bold text-[#77869f]">Source locator</dt>
+          <dt className="text-xs font-bold text-[#77869f]">ID sumber bukti</dt>
           <dd className="mt-1 break-all font-mono text-sm font-black text-[#0b1b43]">{evidence.locator_id}</dd>
         </div>
       </dl>
@@ -113,7 +113,7 @@ function DocumentFinding({ finding }: { finding: AnalysisFindingView }) {
             </div>
           </div>
           <div className="shrink-0 sm:text-right">
-            <p className="text-xs font-bold text-[#77869f]">Confidence</p>
+            <p className="text-xs font-bold text-[#77869f]">Kecukupan bukti</p>
             <p className="mt-1 font-mono text-xl font-black text-[#0b1b43]">{percent(finding.confidence)}</p>
           </div>
         </div>
