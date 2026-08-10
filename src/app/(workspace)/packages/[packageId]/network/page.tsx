@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AnalysisModuleDetail } from "@/components/analysis-module-detail";
+import { GraphNetworkPanel } from "@/components/graph-network-panel";
 import { buildGoldenAnalysisFindings, projectAnalysisFindings } from "@/lib/analysis-findings";
 import { getLatestAnalysisResults } from "@/lib/analysis/service";
 import { resolveWorkspacePrincipal } from "@/lib/auth/principal";
@@ -29,12 +30,15 @@ export default async function RelationshipDetailPage({ params }: { params: Promi
   if (!engineModule) notFound();
 
   return (
-    <AnalysisModuleDetail
-      packageId={analysis.package_id}
-      packageName={analysis.package_name}
-      title="Graph Engine"
-      description="Tinjau pola partisipasi bersama dan evidence trail. Hubungan statistik bukan bukti koordinasi atau afiliasi."
-      module={engineModule}
-    />
+    <>
+      <AnalysisModuleDetail
+        packageId={analysis.package_id}
+        packageName={analysis.package_name}
+        title="Graph Engine"
+        description="Tinjau pola partisipasi bersama dan evidence trail. Hubungan statistik bukan bukti koordinasi atau afiliasi."
+        module={engineModule}
+        visualization={<GraphNetworkPanel module={engineModule} />}
+      />
+    </>
   );
 }

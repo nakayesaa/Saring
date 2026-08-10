@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { PageHeading } from "@/components/page-heading";
 import type { AnalysisModuleView } from "@/lib/analysis-findings";
@@ -20,12 +21,14 @@ export function AnalysisModuleDetail({
   title,
   description,
   module,
+  visualization,
 }: {
   packageId: string;
   packageName: string;
   title: string;
   description: string;
   module: AnalysisModuleView;
+  visualization?: ReactNode;
 }) {
   return (
     <div className="contents">
@@ -60,6 +63,8 @@ export function AnalysisModuleDetail({
             {module.engine_version} · {module.model_version ?? "deterministic-rules"}
           </p>
         </section>
+
+        {visualization}
 
         <section className="mt-7">
           <h2 className="text-2xl font-extrabold text-[#0b1b43]">Evidence-linked signals</h2>
